@@ -8,6 +8,8 @@
 
 using namespace std;
 
+static ios_base::Init iostream_initializer;
+
 const float WINDOW_WIDTH(800);
 const float WINDOW_HEIGHT(600);
 
@@ -20,6 +22,7 @@ struct Object {
     string name;
     int x;
     int y;
+    bool found;
 };
 
 int main() {
@@ -62,7 +65,7 @@ int main() {
             string objectName;
             int x, y;
             stream >> objectName >> x >> y;
-            objects.push_back({objectName, x, y});
+            objects.push_back({objectName, x, y, false});
         }else if(key == "CAM_EDGES"){
             int minEdge_x, minEdge_y, maxEdge_x, maxEdge_y;
             stream >> minEdge_x >> minEdge_y >> maxEdge_x >> maxEdge_y;
@@ -102,11 +105,12 @@ int main() {
                 for (auto& obj : objects) {
                     cout << obj.x << " " << obj.y << endl;
                     if(
-                        (position.x > obj.x) &&
-                        (position.x < (obj.x + selectSize)) &&
-                        (position.y > obj.y) &&
-                        (position.y < (obj.y + selectSize))
+                        (position.x > obj.x - selectSize/2) &&
+                        (position.x < (obj.x + selectSize/2)) &&
+                        (position.y > obj.y - selectSize/2) &&
+                        (position.y < (obj.y + selectSize/2))
                     ){
+                        obj.found = true;
                         cout << "Successfully selected " << obj.name << endl;
                     }
                 }
@@ -163,11 +167,30 @@ int main() {
 
         //comment or uncomment for debugging, this will add a green box so you can see the selection area
         for (auto& obj : objects) {
-            DrawRectangle(obj.x, obj.y, selectSize, selectSize, GREEN);
-            DrawText(obj.name.c_str(), obj.x, obj.y - 20, 20, GREEN);
+            // DrawRectangle(obj.x - selectSize/2, obj.y - selectSize/2, selectSize, selectSize, GREEN);
+            for (int i = 0; i < 5; i++)
+            {
+                DrawCircleLines(obj.x, obj.y, 100-i, ColorAlpha(RED, obj.found ? 1.0f : 0.0f));
+            }
+            
+            DrawText(obj.name.c_str(), obj.x - 50, obj.y - 12, 25, ColorAlpha(RED, obj.found ? 1.0f : 0.0f));
         }
 
         EndMode2D();
+
+        DrawRectangle(0, 0, WINDOW_WIDTH, 50, ColorAlpha(BLACK, 0.5));
+        int count = 0;
+        int found_objects = 0;
+        for (Object obj : objects) {
+            DrawText(obj.name.c_str(), 25+(count * ((WINDOW_WIDTH-20)/objects.size())), 10, 20, obj.found ? GRAY : WHITE);
+            if (obj.found) {found_objects++;}
+            count++;
+        }
+        if (found_objects == count) {
+            ClearBackground(WHITE);
+            DrawText("You Win!", WINDOW_WIDTH/2-200, WINDOW_HEIGHT/2-50, 100, BLACK);
+        }
+
         EndDrawing();
     }
 
