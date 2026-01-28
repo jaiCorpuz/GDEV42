@@ -31,7 +31,7 @@ int main() {
     
     Vector2 position = {400, 300};
 
-    Rectangle view = {0, 0, 500, 300};
+    Rectangle view = {0, 0, 0, 0};
 
     SetTargetFPS(60.0f);
 
@@ -74,8 +74,10 @@ int main() {
             maxEdge.x = maxEdge_x;
             maxEdge.y = maxEdge_y;
         } else if (key == "CAM_WINDOW") { //NOT USED YET
-            int w, h;
-            stream >> w >> h;
+            int cam_w, cam_h;
+            stream >> cam_w >> cam_h;
+            view.width = cam_w;
+            view.height = cam_h;
         } else if (key == "CAM_DRIFT") { //NOT USED YET
             float drift;
             stream >> drift;
@@ -161,7 +163,7 @@ int main() {
         BeginMode2D(camera);
         ClearBackground(MAROON);
         DrawTexture(background, minEdge.x, minEdge.y, WHITE);
-        DrawRectangleLinesEx(view, 10.0f, SKYBLUE);
+        // DrawRectangleLinesEx(view, 10.0f, SKYBLUE);
         DrawCircle(position.x, position.y, 10.0f, BLUE);
 
 
