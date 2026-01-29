@@ -73,11 +73,11 @@ int main() {
             minEdge.y = minEdge_y;
             maxEdge.x = maxEdge_x;
             maxEdge.y = maxEdge_y;
-        } else if (key == "CAM_WINDOW") { //NOT USED YET
+        } else if (key == "CAM_WINDOW") {
             stream >> cam_w >> cam_h;
             view.width = cam_w;
             view.height = cam_h;
-        } else if (key == "CAM_DRIFT") { //NOT USED YET
+        } else if (key == "CAM_DRIFT") {
             stream >> drift;
         } else if (key == "CAM_ZOOM") {
             stream >> zoom;
@@ -169,7 +169,6 @@ int main() {
             {minEdge.x + (WINDOW_WIDTH/2)/camera.zoom, minEdge.y + (WINDOW_HEIGHT/2)/camera.zoom},
             {maxEdge.x - (WINDOW_WIDTH/2)/camera.zoom, maxEdge.y - (WINDOW_HEIGHT/2)/camera.zoom});
 
-    
         BeginDrawing();
         BeginMode2D(camera);
         ClearBackground(MAROON);
@@ -178,9 +177,7 @@ int main() {
         DrawCircle(position.x, position.y, 10.0f, BLUE);
 
 
-        //comment or uncomment for debugging, this will add a green box so you can see the selection area
         for (auto& obj : objects) {
-            DrawRectangle(obj.x - selectSize/2, obj.y - selectSize/2, selectSize, selectSize, GREEN);
             for (int i = 0; i < 5; i++)
             {
                 DrawCircleLines(obj.x, obj.y, 100-i, ColorAlpha(RED, obj.found ? 1.0f : 0.0f));
