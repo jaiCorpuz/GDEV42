@@ -12,6 +12,7 @@ static ios_base::Init iostream_initializer;
 
 const float WINDOW_WIDTH(800);
 const float WINDOW_HEIGHT(600);
+const float pointerSize = 10.0f;
 
 Vector2 minEdge = {-500, -500};
 Vector2 maxEdge = {1548, 1032};
@@ -43,11 +44,6 @@ int main() {
 
     bool selecting = false;     
     float selectSize = 100.0f;
-
-    //for pointer
-    float center_x = WINDOW_WIDTH / 2.0f;
-    float center_y = WINDOW_HEIGHT / 2.0f;
-    float pointerSize = 20.0f;
 
     //Setting up using the settings.txt
     ifstream file("settings.txt");
@@ -139,23 +135,37 @@ int main() {
         }
 
         //comment or uncomment for debugging to find the position of the stuff since this just prints the positions in the console
-        //cout << position.x << " " << position.y << endl;
+        // cout << position.x << " " << position.y << endl;
+
+        Vector2 halfView = {((WINDOW_WIDTH/2)/camera.zoom),((WINDOW_HEIGHT/2)/camera.zoom)};
+
+        float minCameraX = minEdge.x + halfView.x;
+        float maxCameraX = maxEdge.x - halfView.x;
+        float minCameraY = minEdge.y + halfView.y;
+        float maxCameraY = maxEdge.y - halfView.y;
+
+        // Clamps camera to the world boundaries
+        camera.target = Vector2Clamp(camera.target,
+            {minEdge.x + halfView.x, minEdge.y + halfView.y},
+            {maxEdge.x - halfView.x, maxEdge.y - halfView.y});
 
         // Camera drift; disabled if zoomed
         if (!isZoomed) {
             Vector2 diff = Vector2Subtract(position, camera.target);
             camera.target = Vector2Add(camera.target, Vector2Scale(diff, drift*delta_time));
-            
         } else {
             camera.target = position;
         }
 
+
+
         // Clamps cursor to the world boundaries
-        position = Vector2Clamp(position, {minEdge.x + 10, minEdge.y + 10}, {maxEdge.x - 10, maxEdge.y - 10});
-        
+        position = Vector2Clamp(position, {minEdge.x + pointerSize, minEdge.y + pointerSize}, {maxEdge.x - pointerSize, maxEdge.y - pointerSize});
+
         // Centers rectangle view
         view.x = camera.target.x - view.width / 2;
         view.y = camera.target.y - view.height / 2;
+
 
         // Keeps pointer inside rectangle view
         if (position.x < view.x) camera.target.x -= view.x - position.x;
@@ -166,15 +176,16 @@ int main() {
 
         // Clamps camera to the world boundaries
         camera.target = Vector2Clamp(camera.target,
-            {minEdge.x + (WINDOW_WIDTH/2)/camera.zoom, minEdge.y + (WINDOW_HEIGHT/2)/camera.zoom},
-            {maxEdge.x - (WINDOW_WIDTH/2)/camera.zoom, maxEdge.y - (WINDOW_HEIGHT/2)/camera.zoom});
+            {minEdge.x + halfView.x, minEdge.y + halfView.y},
+            {maxEdge.x - halfView.x, maxEdge.y - halfView.y});
 
+        
         BeginDrawing();
         BeginMode2D(camera);
         ClearBackground(MAROON);
         DrawTexture(background, minEdge.x, minEdge.y, WHITE);
         if (!isZoomed) DrawRectangleLinesEx(view, 10.0f, SKYBLUE);
-        DrawCircle(position.x, position.y, 10.0f, BLUE);
+        DrawCircle(position.x, position.y, pointerSize, BLUE);
 
 
         for (auto& obj : objects) {
