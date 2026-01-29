@@ -157,15 +157,12 @@ int main() {
             camera.target = position;
         }
 
-
-
         // Clamps cursor to the world boundaries
         position = Vector2Clamp(position, {minEdge.x + pointerSize, minEdge.y + pointerSize}, {maxEdge.x - pointerSize, maxEdge.y - pointerSize});
 
         // Centers rectangle view
         view.x = camera.target.x - view.width / 2;
         view.y = camera.target.y - view.height / 2;
-
 
         // Keeps pointer inside rectangle view
         if (position.x < view.x) camera.target.x -= view.x - position.x;
@@ -220,8 +217,3 @@ int main() {
     return 0;
 
 }
-
-
-// DELETE BEFORE SUBMISSION: clang++ Main.cpp libraylib.a -std=c++17 \-framework Cocoa -framework IOKit -framework CoreVideo -framework OpenGL -framework Foundation -o ispy
-//  C:\raylib\w64devkit\w64devkit.exe
-// HII SIRRR!! - Avielle: cd Documents/"[Y4] Second Semester 2026"/GDEV42/GDEV42 || g++ Main.cpp -o out -I raylib/ -L raylib/ -lraylib -lopengl32 -lgdi32 -lwinmm
