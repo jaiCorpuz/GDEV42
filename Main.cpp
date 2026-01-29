@@ -21,8 +21,8 @@ bool isZoomed = false;
 
 struct Object {
     string name;
-    int x;
-    int y;
+    float x;
+    float y;
     bool found;
 };
 
@@ -52,7 +52,7 @@ int main() {
     //Setting up using the settings.txt
     ifstream file("settings.txt");
     string line, imageName, objectName;
-    int x, y, minEdge_x, minEdge_y, maxEdge_x, maxEdge_y;
+    float x, y, minEdge_x, minEdge_y, maxEdge_x, maxEdge_y;
     int cam_w, cam_h;
     float drift, zoom;
     vector<Object> objects;
