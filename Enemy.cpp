@@ -1,0 +1,135 @@
+#include <raylib.h>
+#include <raymath.h>
+#include <iostream>
+#include "Enemy.hpp"
+
+void Enemy::Update(float delta_time) {
+    current_state->Update(delta_time);
+}
+
+void Enemy::Draw() {
+    DrawRectangle(position.x, position.y, size, size, color);
+}
+
+Enemy::Enemy(Vector2 pos, float siz, float spd){
+    position = pos;
+    size = siz;
+    speed = spd;
+
+    wandering.enemy = &*this;
+    chasing.enemy = &*this;
+    readyingAttack.enemy = &*this;
+    attacking.enemy = &*this;
+
+    SetState(&wandering);
+
+}
+
+void Enemy::SetState(EnemyState* state){
+    if (current_state != nullptr) {
+        current_state->Exit();
+    }
+
+    current_state = state;
+    current_state->Enter();
+}
+
+EnemyState* Enemy::GetCurrentState(){
+    return current_state;
+}
+
+void EnemyWandering::Enter(){
+    enemy->color = BLUE;
+    // Chooses a random initial direction for the enemy to face
+    // UGH MATH I HAD TO RECONSULT MY CALKILLUS
+    // JIC so basically because cos and sin uses radians i sbeve
+    // 0-359 for the degree, then to make it radians, multiply it by pi over 180
+    float angle = GetRandomValue(0, 359) * (PI / 180.0f);
+    // cos gives the x vector axis
+    // sin gives the y vector axis
+    // courtesy of Jozen HDSAHDSAHDSAH who is smarter in calkillus than mwah
+    enemy->velocity = { cosf(angle), sinf(angle) };
+
+    //to make movement consistent 
+    enemy->velocity = Vector2Normalize(enemy->velocity);
+}
+
+void EnemyChasing::Enter(){
+    enemy->color = YELLOW;
+}
+
+void EnemyReadyingAttack::Enter(){
+    enemy->color = ORANGE;
+}
+
+void EnemyAttacking::Enter(){
+    enemy->color = RED;
+}
+
+void EnemyWandering::Exit(){}
+
+void EnemyChasing::Exit(){}
+
+void EnemyReadyingAttack::Exit(){}
+
+void EnemyAttacking::Exit(){}
+
+void EnemyWandering::Update(float delta_time){
+
+    // Move le enemie
+    enemy->position = Vector2Add(
+        enemy->position,
+        Vector2Scale(enemy->velocity, enemy->speed * delta_time)
+    );
+
+    // Enemy doesnt go beyond the window space
+    if (enemy->position.x < 0 || enemy->position.x > 1280){
+        enemy->velocity.x *= -1;
+    } 
+    if (enemy->position.y < 0 || enemy->position.y > 720){
+        enemy->velocity.y *= -1;
+    } 
+    
+    // Enemy moves in random directions limitedly, 2% chance (lemme know if it should be higher...?)
+    if (GetRandomValue(0, 100) < 2) {
+        float angle = GetRandomValue(0, 359) * (PI / 180.0f);
+        enemy->velocity = Vector2Normalize({ cosf(angle), sinf(angle) });
+    }
+
+    //If Player enters the enemy’s detection radius, the enemy transitions to the Chasing state.
+    if (enemy->playerRef != nullptr) {
+        float detectionDistance = Vector2Distance(enemy->position, enemy->playerRef->position);
+        if (detectionDistance < enemy->detectionRadius) {
+            enemy->SetState(&enemy->chasing);
+        }
+    }
+}
+
+void EnemyChasing::Update(float delta_time){
+    if (enemy->playerRef == nullptr) return;
+    
+    Vector2 playerDirection = Vector2Subtract(enemy->playerRef->position, enemy->position);
+    float playerDistance = Vector2Length(playerDirection);
+
+    //The enemy chases the player, rotating its body towards the Player’s direction
+    playerDirection = Vector2Normalize(playerDirection);
+    enemy->position = Vector2Add(enemy->position, Vector2Scale(playerDirection, enemy->speed * delta_time));
+
+    //If Player leaves the Enemy’s aggro radius, the enemy transitions back to the Wandering state.
+    if (playerDistance > enemy->detectionRadius) {
+        enemy->SetState(&enemy->wandering);
+    }
+
+    //If Player enters the enemy’s attack radius, the enemy transitions to the Readying Attack state.
+    if (playerDistance < enemy->attackRadius) {
+        enemy->SetState(&enemy->readyingAttack);
+    }
+}
+
+void EnemyReadyingAttack::Update(float delta_time){
+    //enter enemyreadyingattack logic here
+}
+
+void EnemyAttacking::Update(float delta_time){
+    //enter enemyattacking logic here
+}
