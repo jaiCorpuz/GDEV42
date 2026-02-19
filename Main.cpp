@@ -9,8 +9,8 @@ int main() {
     Player player({400, 300}, 20, 200);
 
     Enemy enemy({600, 400}, 50, 100);
-    enemy.detectionRadius = 300;
-    enemy.aggroRadius = 200;
+    enemy.aggroRadius = 300;
+    enemy.detectionRadius = 200;
     enemy.attackRadius = 100;
 
     enemy.playerRef = &player;

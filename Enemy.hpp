@@ -63,8 +63,8 @@ public:
     float attackDuration;
 
     //the detection radii's
-    float detectionRadius; //first
-    float aggroRadius; //second middle
+    float aggroRadius; //first 
+    float detectionRadius; //second middle
     float attackRadius; //innermost
 
     EnemyWandering wandering;

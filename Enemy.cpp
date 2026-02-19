@@ -116,7 +116,7 @@ void EnemyChasing::Update(float delta_time){
     enemy->position = Vector2Add(enemy->position, Vector2Scale(playerDirection, enemy->speed * delta_time));
 
     //If Player leaves the Enemy’s aggro radius, the enemy transitions back to the Wandering state.
-    if (playerDistance > enemy->detectionRadius) {
+    if (playerDistance > enemy->aggroRadius) {
         enemy->SetState(&enemy->wandering);
     }
 
