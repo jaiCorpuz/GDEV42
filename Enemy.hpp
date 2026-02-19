@@ -62,6 +62,14 @@ public:
     float attackTimer;
     float attackDuration;
 
+    Vector2 dashDirection;
+    Vector2 lockedTargetPosition;
+
+    float dashSpeed = 400.0f;
+    float dashTimer = 0.3f;
+    float dashDuration = 0.0f;
+    float readyTimer;
+
     //the detection radii's
     float aggroRadius; //first 
     float detectionRadius; //second middle

@@ -12,7 +12,7 @@
 |------------------------------------------------------|
 */
 
-
+#pragma once
 #include <raylib.h>
 #include <raymath.h>
 #include <iostream>
@@ -21,6 +21,10 @@
 
 void Player::Update(float delta_time) {
     current_state->Update(delta_time);
+
+    if (damageCooldownTimer > 0.0f) {
+        damageCooldownTimer -= delta_time;
+    }
 }
 
 void Player::Draw() {
@@ -34,6 +38,7 @@ Player::Player(Vector2 pos, float rad, float spd) {
 
     attackDuration = 0.5f;
     dodgeDuration  = 0.3f;
+    damageCooldownDuration = 0.5f;
 
     idle.player = &*this;
     moving.player = &*this;
@@ -177,7 +182,7 @@ void PlayerDodging::Update(float delta_time) {
     //When dodging, move player in direction faster
     player->position = Vector2Add(
         player->position,
-        Vector2Scale(player->dodgeDirection, player->speed * 4 * delta_time)
+        Vector2Scale(player->dodgeDirection, player->speed * 2 * delta_time)
     );
 
     //If dodge timer finished, set state to idle
@@ -186,3 +191,38 @@ void PlayerDodging::Update(float delta_time) {
     }
 
 }
+
+void Player::TakeDamage(float damage) {
+    if (damageCooldownTimer > 0.0f) {
+        return;
+    }
+    
+    float mult = GetDamageMult();
+
+    float finalDamage = damage * mult;
+
+    if (finalDamage <= 0.0f) {
+        return;
+    }
+
+    hp -= finalDamage;
+
+    damageCooldownTimer = damageCooldownDuration;
+
+    if (hp < 0.0f) {
+        hp = 0.0f;
+    }
+}
+
+float Player::GetDamageMult() {
+    if (dynamic_cast<PlayerBlocking*>(current_state)) {
+        return 0.5f;
+    }
+
+    if (dynamic_cast<PlayerDodging*>(current_state)){
+        return 0.0f;
+    }
+
+    return 1.0f;
+}
+

@@ -2,6 +2,7 @@
 #include <raymath.h>
 #include <iostream>
 #include "Enemy.hpp"
+#include "Player.hpp"
 
 void Enemy::Update(float delta_time) {
     current_state->Update(delta_time);
@@ -60,10 +61,20 @@ void EnemyChasing::Enter(){
 
 void EnemyReadyingAttack::Enter(){
     enemy->color = ORANGE;
+
+    enemy->velocity = {0, 0};
+    enemy->lockedTargetPosition = enemy->playerRef->position;
+    enemy->readyTimer = 0.6f;
 }
 
 void EnemyAttacking::Enter(){
     enemy->color = RED;
+    
+    Vector2 direction = Vector2Subtract(enemy->lockedTargetPosition, enemy->position);
+
+    direction = Vector2Normalize(direction);
+    
+    enemy->dashTimer = enemy->dashDuration;
 }
 
 void EnemyWandering::Exit(){}
@@ -127,9 +138,19 @@ void EnemyChasing::Update(float delta_time){
 }
 
 void EnemyReadyingAttack::Update(float delta_time){
-    //enter enemyreadyingattack logic here
+    enemy->readyTimer -= delta_time;
+    
+    if (enemy->readyTimer <= 0.0f) {
+        enemy->SetState(&enemy->attacking);
+    }
 }
 
 void EnemyAttacking::Update(float delta_time){
-    //enter enemyattacking logic here
+    enemy->dashTimer -= delta_time;
+    
+    enemy->position = Vector2Add(enemy->position, Vector2Scale(enemy->dashDirection, enemy->dashSpeed * delta_time));
+
+    if (enemy->dashTimer <= 0.0f) {
+        enemy->SetState(&enemy->wandering);
+    }
 }

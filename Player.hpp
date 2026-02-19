@@ -80,7 +80,7 @@ public:
     Vector2 position;
     float radius;
     Color color;
-    float hp;
+    float hp = 5.0f;
 
     Vector2 velocity;
     Vector2 acceleration;
@@ -92,6 +92,9 @@ public:
     float dodgeTimer;
     float dodgeDuration;
     Vector2 dodgeDirection;
+
+    float damageCooldownTimer;
+    float damageCooldownDuration;
 
     PlayerIdle idle;
     PlayerMoving moving;
@@ -106,6 +109,9 @@ public:
     void Draw();
 
     void SetState(PlayerState* state);
+
+    void TakeDamage(float amount);
+    float GetDamageMult();
 
     PlayerState* GetCurrentState();
 };
