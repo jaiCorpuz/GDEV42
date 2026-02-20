@@ -85,6 +85,7 @@ public:
     float radius;
     Color color;
     float hp = 5.0f;
+    Camera2D* camera;
 
     Vector2 velocity;
     Vector2 acceleration;

@@ -33,6 +33,9 @@ void Player::Update(float delta_time) {
 }
 
 void Player::Draw() {
+    if (dynamic_cast<PlayerAttacking*>(current_state)) {
+        DrawCircleV(position, radius + 25, VIOLET);
+    }
     DrawCircleV(position, radius, color);
 }
 
@@ -141,11 +144,21 @@ void PlayerMoving::Update(float delta_time) {
         player->SetState(&player->idle);
     }
 
+    
     //Move le player
     player->velocity = Vector2Normalize(player->velocity);
     player->position = Vector2Add(
         player->position,
         Vector2Scale(player->velocity, player->speed * delta_time)
+    );
+    player->camera->offset = Vector2Add(
+        player->camera->offset,
+        Vector2Scale(player->velocity, player->speed * delta_time)
+    );
+    player->camera->offset = Vector2Clamp(
+        player->camera->offset,
+        {1280 * 3 / 8, 720 * 3 / 8},
+        {1280 * 5 / 8, 720 * 5 / 8}
     );
 
     //If Space while moving, set state to dodge 
@@ -168,8 +181,7 @@ void PlayerAttacking::Update(float delta_time) {
     if (player->attackTimer <= 0.0f) {
         player->SetState(&player->idle);
     }
-
-    DrawCircleV(player->position, player->radius + 25, VIOLET);  // HARD CODED
+  // HARD CODED
 }
 
 void PlayerBlocking::Update(float delta_time) {
