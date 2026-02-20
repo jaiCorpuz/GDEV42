@@ -43,11 +43,13 @@ void Enemy::Update(float delta_time) {
 }
 
 void Enemy::Draw() {
-    DrawRectangle(position.x, position.y, size, size, color);
-    DrawCircleLines(position.x + size/2, position.y + size/2, detectionRadius, LIGHTGRAY);
-    DrawCircleLines(position.x + size/2, position.y + size/2, aggroRadius, ORANGE);
-    DrawCircleLines(position.x + size/2, position.y + size/2, attackRadius, RED);
-    DrawCircle(position.x + size/2, position.y + size/2, size/4, (hp <= 0 ? BLACK : RED));
+    if (alive) {
+        DrawRectangle(position.x, position.y, size, size, color);
+        DrawCircleLines(position.x + size/2, position.y + size/2, detectionRadius, LIGHTGRAY);
+        DrawCircleLines(position.x + size/2, position.y + size/2, aggroRadius, ORANGE);
+        DrawCircleLines(position.x + size/2, position.y + size/2, attackRadius, RED);
+        DrawCircle(position.x + size/2, position.y + size/2, size/4, (hp <= 0 ? BLACK : RED));
+    }
 }
 
 Enemy::Enemy(Vector2 pos, float siz, float spd){
@@ -55,6 +57,7 @@ Enemy::Enemy(Vector2 pos, float siz, float spd){
     size = siz;
     speed = spd;
     hp = 2.0f;
+    alive = true;
 
     damageCooldownDuration = 1.0f;
 
@@ -92,7 +95,8 @@ void Enemy::TakeDamage() {
 
     damageCooldownTimer = damageCooldownDuration;
 
-    if (hp < 0.0f) {
+    if (hp <= 0.0f) {
+        alive = false;
         hp = 0.0f;
     }
 }

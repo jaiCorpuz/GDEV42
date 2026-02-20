@@ -54,6 +54,7 @@ public:
     float size;
     Color color;
     float hp;
+    bool alive;
 
     Vector2 velocity;
     Vector2 acceleration;
