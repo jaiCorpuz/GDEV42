@@ -1,6 +1,9 @@
 #include "raylib.h"
 #include "Player.cpp"
 #include "Enemy.cpp"
+#include <vector>
+
+static std::ios_base::Init iostream_initializer;
 
 const float WINDOW_WIDTH(1280);
 const float WINDOW_HEIGHT(720);
@@ -12,58 +15,40 @@ int main() {
 
     Player player({400, 200}, 20, 200);
 
-    Enemy enemy({600, 400}, 50, 100);
-    enemy.aggroRadius = 300;
-    enemy.detectionRadius = 200;
-    enemy.attackRadius = 100;
+    std::vector<Enemy> enemies;
+    enemies.push_back(Enemy({600, 400}, 50, 100));
 
-    enemy.playerRef = &player;
-
-    Rectangle enemyRect = {
-        enemy.position.x,
-        enemy.position.y,
-        enemy.size,
-        enemy.size
-    };
-
-    bool collided = CheckCollisionCircleRec(
-        player.position,
-        player.radius,
-        enemyRect
-    );
-
-    if (collided) {
-        player.TakeDamage(1.0f);
+    
+    for (int i = 0; i < enemies.size(); i++) {
+        enemies.at(i).playerRef = &player;
     }
 
     while (!WindowShouldClose()) {
         float deltaTime = GetFrameTime();
-
+        
         player.Update(deltaTime);
-        enemy.Update(deltaTime);
-
-        Rectangle enemyRect = {
-            enemy.position.x,
-            enemy.position.y,
-            enemy.size,
-            enemy.size
-        };
-
-        if (CheckCollisionCircleRec(player.position, player.radius, enemyRect)) {
-            player.TakeDamage(1.0f);
+        for (int i = 0; i < enemies.size(); i++) {
+            enemies.at(i).Update(deltaTime);
         }
-
+        
         BeginDrawing();
         ClearBackground(RAYWHITE);
-
+        
         player.Draw();
-        enemy.Draw();
-        DrawCircleLines(enemy.position.x + enemy.size/2, enemy.position.y + enemy.size/2, enemy.detectionRadius, LIGHTGRAY);
-        DrawCircleLines(enemy.position.x + enemy.size/2, enemy.position.y + enemy.size/2, enemy.aggroRadius, ORANGE);
-        DrawCircleLines(enemy.position.x + enemy.size/2, enemy.position.y + enemy.size/2, enemy.attackRadius, RED);
-
+        for (int i = 0; i < enemies.size(); i++) {
+            enemies.at(i).Draw();
+            DrawCircleLines(enemies.at(i).position.x + enemies.at(i).size/2, enemies.at(i).position.y + enemies.at(i).size/2, enemies.at(i).detectionRadius, LIGHTGRAY);
+            DrawCircleLines(enemies.at(i).position.x + enemies.at(i).size/2, enemies.at(i).position.y + enemies.at(i).size/2, enemies.at(i).aggroRadius, ORANGE);
+            DrawCircleLines(enemies.at(i).position.x + enemies.at(i).size/2, enemies.at(i).position.y + enemies.at(i).size/2, enemies.at(i).attackRadius, RED);
+        }
+        
         DrawText(TextFormat("%.0f", player.hp), 20, 20, 35, BLACK);
 
+        if (player.hp <= 0) {
+            DrawRectangle(0,0, WINDOW_WIDTH, WINDOW_HEIGHT, RAYWHITE);
+            DrawText("YOU LOSE", WINDOW_WIDTH / 2 - 100, WINDOW_HEIGHT / 2 - 50, 100, BLACK);
+        } 
+        
         EndDrawing();
     }
 

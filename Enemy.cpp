@@ -6,6 +6,20 @@
 
 void Enemy::Update(float delta_time) {
     current_state->Update(delta_time);
+
+    // If Player collides with the enemy, they get damaged
+    // if (CheckCollisionCircleRec(
+    //     playerRef->position,
+    //     playerRef->radius,
+    //     {
+    //         position.x,
+    //         position.y,
+    //         size,
+    //         size
+    //     })
+    // ) {
+    //     playerRef->TakeDamage(1.0f);
+    // }
 }
 
 void Enemy::Draw() {
@@ -16,6 +30,10 @@ Enemy::Enemy(Vector2 pos, float siz, float spd){
     position = pos;
     size = siz;
     speed = spd;
+
+    aggroRadius = 300;
+    detectionRadius = 200;
+    attackRadius = 100;
 
     wandering.enemy = &*this;
     chasing.enemy = &*this;
@@ -114,6 +132,7 @@ void EnemyWandering::Update(float delta_time){
             enemy->SetState(&enemy->chasing);
         }
     }
+    
 }
 
 void EnemyChasing::Update(float delta_time){
