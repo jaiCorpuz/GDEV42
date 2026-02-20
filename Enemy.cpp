@@ -10,6 +10,9 @@ void Enemy::Update(float delta_time) {
     } else {
         damageCooldownTimer = 0;
     }
+    
+    if (attackDuration > 0.0f)
+    attackDuration -= delta_time;
 
     current_state->Update(delta_time);
 
@@ -43,6 +46,25 @@ void Enemy::Update(float delta_time) {
 }
 
 void Enemy::Draw() {
+    Rectangle dest = {
+        position.x,
+        position.y,
+        size,
+        size
+    };
+
+    Vector2 origin = {
+        size / 2.0f,
+        size / 2.0f
+    };
+
+    DrawRectanglePro(
+        dest,
+        origin,
+        rotation * RAD2DEG,
+        color
+    );
+
     if (alive) {
         DrawRectangle(position.x, position.y, size, size, color);
         DrawCircleLines(position.x + size/2, position.y + size/2, detectionRadius, LIGHTGRAY);
@@ -74,12 +96,16 @@ Enemy::Enemy(Vector2 pos, float siz, float spd){
 }
 
 void Enemy::SetState(EnemyState* state){
+    if (current_state == state) return;
+    
     if (current_state != nullptr) {
         current_state->Exit();
     }
 
     current_state = state;
-    current_state->Enter();
+    if (current_state != nullptr) {
+        current_state->Enter();
+    }
 }
 
 EnemyState* Enemy::GetCurrentState(){
@@ -123,20 +149,14 @@ void EnemyChasing::Enter(){
 
 void EnemyReadyingAttack::Enter(){
     enemy->color = ORANGE;
-
     enemy->velocity = {0, 0};
-    enemy->lockedTargetPosition = enemy->playerRef->position;
     enemy->readyTimer = 0.6f;
 }
 
 void EnemyAttacking::Enter(){
     enemy->color = RED;
-    
-    Vector2 direction = Vector2Subtract(enemy->lockedTargetPosition, enemy->position);
-
-    direction = Vector2Normalize(direction);
-    
-    enemy->dashTimer = enemy->dashDuration;
+    enemy->dashTimer= enemy->dashDuration;
+    enemy->rotation = atan2f(enemy->dashDirection.y, enemy->dashDirection.x);
 }
 
 void EnemyWandering::Exit(){}
@@ -147,8 +167,9 @@ void EnemyReadyingAttack::Exit(){}
 
 void EnemyAttacking::Exit(){}
 
-void EnemyWandering::Update(float delta_time){
 
+
+void EnemyWandering::Update(float delta_time){
     // Move le enemie
     enemy->position = Vector2Add(
         enemy->position,
@@ -169,6 +190,11 @@ void EnemyWandering::Update(float delta_time){
         enemy->velocity = Vector2Normalize({ cosf(angle), sinf(angle) });
     }
 
+    if (Vector2Length(enemy->velocity) > 0.001f) {
+        Vector2 moveDir = Vector2Normalize(enemy->velocity);
+        enemy->rotation = atan2f(moveDir.y, moveDir.x);
+    }
+
     //If Player enters the enemy’s detection radius, the enemy transitions to the Chasing state.
     if (enemy->playerRef != nullptr) {
         float detectionDistance = Vector2Distance(enemy->position, enemy->playerRef->position);
@@ -184,36 +210,47 @@ void EnemyChasing::Update(float delta_time){
     
     Vector2 playerDirection = Vector2Subtract(enemy->playerRef->position, enemy->position);
     float playerDistance = Vector2Length(playerDirection);
-
-    //The enemy chases the player, rotating its body towards the Player’s direction
-    playerDirection = Vector2Normalize(playerDirection);
-    enemy->position = Vector2Add(enemy->position, Vector2Scale(playerDirection, enemy->speed * delta_time));
-
+    
     //If Player leaves the Enemy’s aggro radius, the enemy transitions back to the Wandering state.
     if (playerDistance > enemy->aggroRadius) {
         enemy->SetState(&enemy->wandering);
     }
 
     //If Player enters the enemy’s attack radius, the enemy transitions to the Readying Attack state.
-    if (playerDistance < enemy->attackRadius) {
+    if (playerDistance < enemy->attackRadius && enemy->attackDuration <= 0.0f) {
         enemy->SetState(&enemy->readyingAttack);
+        return;
     }
+    
+    //The enemy chases the player, rotating its body towards the Player’s direction
+    playerDirection = Vector2Normalize(playerDirection);
+    enemy->rotation = atan2f(playerDirection.y, playerDirection.x);
+    enemy->position = Vector2Add(enemy->position, Vector2Scale(playerDirection, enemy->speed * delta_time));
+
 }
 
 void EnemyReadyingAttack::Update(float delta_time){
     enemy->readyTimer -= delta_time;
+
+    Vector2 dirToPlayer = Vector2Subtract(enemy->playerRef->position, enemy->position);
+    dirToPlayer = Vector2Normalize(dirToPlayer);
+
+    enemy->rotation = atan2f(dirToPlayer.y, dirToPlayer.x);
     
     if (enemy->readyTimer <= 0.0f) {
+        Vector2 lockedDir = Vector2Subtract (enemy->playerRef->position, enemy->position);
+        enemy->dashDirection = Vector2Normalize(lockedDir);
         enemy->SetState(&enemy->attacking);
     }
 }
 
 void EnemyAttacking::Update(float delta_time){
     enemy->dashTimer -= delta_time;
+    enemy->position = Vector2Add(enemy->position, Vector2Scale(enemy->dashDirection, enemy->speed * 4.5 * delta_time));
     
-    enemy->position = Vector2Add(enemy->position, Vector2Scale(enemy->dashDirection, enemy->dashSpeed * delta_time));
-
-    if (enemy->dashTimer <= 0.0f) {
-        enemy->SetState(&enemy->wandering);
-    }
+    if (enemy->dashTimer <= 0.0f)
+        {
+            enemy->attackTimer = enemy->attackDuration;
+            enemy->SetState(&enemy->wandering);
+        }
 }

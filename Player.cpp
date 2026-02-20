@@ -22,8 +22,13 @@
 void Player::Update(float delta_time) {
     current_state->Update(delta_time);
 
-    if (damageCooldownTimer > 0.0f) {
-        damageCooldownTimer -= delta_time;
+    if (isInvincible) {
+        invincibleTimer -= delta_time;
+
+        if (invincibleTimer <= 0.0f)
+        {
+            isInvincible = false;
+        }
     }
 }
 
@@ -38,7 +43,7 @@ Player::Player(Vector2 pos, float rad, float spd) {
 
     attackDuration = 0.5f;
     dodgeDuration  = 0.3f;
-    damageCooldownDuration = 0.5f;
+    invincibleDuration = 0.5f;
 
     idle.player = &*this;
     moving.player = &*this;
@@ -194,36 +199,26 @@ void PlayerDodging::Update(float delta_time) {
 }
 
 void Player::TakeDamage(float damage) {
-    if (damageCooldownTimer > 0.0f) {
-        return;
-    }
-    
-    float mult = GetDamageMult();
+    if (isInvincible) return;
 
-    float finalDamage = damage * mult;
+    float multiplier = current_state->GetDamageMult();
+    float finalDamage = damage * multiplier;
 
-    if (finalDamage <= 0.0f) {
-        return;
-    }
+    if (finalDamage <= 0) return;
 
-    hp -= finalDamage;
+    hp -= damage;
 
-    damageCooldownTimer = damageCooldownDuration;
-
-    if (hp < 0.0f) {
-        hp = 0.0f;
-    }
+    isInvincible = true;
+    invincibleTimer = invincibleDuration;
 }
 
-float Player::GetDamageMult() {
-    if (dynamic_cast<PlayerBlocking*>(current_state)) {
-        return 0.5f;
-    }
 
-    if (dynamic_cast<PlayerDodging*>(current_state)){
-        return 0.0f;
-    }
 
-    return 1.0f;
+float PlayerBlocking::GetDamageMult() {
+    return 0.0f;
+}
+
+float PlayerDodging::GetDamageMult() {
+    return 0.5f;
 }
 

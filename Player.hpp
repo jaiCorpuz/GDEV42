@@ -34,43 +34,47 @@ public:
     virtual void Enter() = 0;
     virtual void Update(float delta_time) = 0;
     virtual void Exit() = 0;
+
+    virtual float GetDamageMult() {return 1.0f;}
 };
 
 
 //The different states
 class PlayerIdle : public PlayerState {
 public:
-    void Enter();
-    void Update(float delta_time);
-    void Exit();
+    void Enter() override;
+    void Update(float delta_time) override;
+    void Exit() override;
 };
 
 class PlayerMoving : public PlayerState {
 public:
-    void Enter();
-    void Update(float delta_time);
-    void Exit();
+    void Enter() override;
+    void Update(float delta_time) override;
+    void Exit() override;
 };
 
 class PlayerAttacking : public PlayerState {
 public:
-    void Enter();
-    void Update(float delta_time);
-    void Exit();
+    void Enter() override;
+    void Update(float delta_time) override;
+    void Exit() override;
 };
 
 class PlayerBlocking : public PlayerState {
 public:
-    void Enter();
-    void Update(float delta_time);
-    void Exit();
+    void Enter() override;
+    void Update(float delta_time) override;
+    void Exit() override;
+    float GetDamageMult() override;
 };
 
 class PlayerDodging : public PlayerState {
 public:
-    void Enter();
-    void Update(float delta_time);
-    void Exit();
+    void Enter() override;
+    void Update(float delta_time) override;
+    void Exit() override;
+    float GetDamageMult() override;
 };
 
 //The player
@@ -93,8 +97,9 @@ public:
     float dodgeDuration;
     Vector2 dodgeDirection;
 
-    float damageCooldownTimer;
-    float damageCooldownDuration;
+    float invincibleTimer;
+    float invincibleDuration;
+    bool isInvincible = false;
 
     PlayerIdle idle;
     PlayerMoving moving;
@@ -111,7 +116,6 @@ public:
     void SetState(PlayerState* state);
 
     void TakeDamage(float amount);
-    float GetDamageMult();
 
     PlayerState* GetCurrentState();
 };
