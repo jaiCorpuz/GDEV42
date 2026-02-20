@@ -15,34 +15,34 @@ int main() {
 
     Player player({400, 200}, 20, 200);
 
-    std::vector<Enemy> enemies;
-    enemies.push_back(Enemy({600, 400}, 50, 100));
-
+    // std::vector<Enemy> enemies;
+    // enemies.push_back(Enemy({600, 400}, 50, 100));
+    Enemy enemy({600, 400}, 50, 100);
     
-    for (int i = 0; i < enemies.size(); i++) {
-        enemies.at(i).playerRef = &player;
-    }
+    // for (int i = 0; i < enemies.size(); i++) {
+    //     enemies.at(i).playerRef = &player;
+    // }
+    enemy.playerRef = &player;
 
     while (!WindowShouldClose()) {
         float deltaTime = GetFrameTime();
         
         player.Update(deltaTime);
-        for (int i = 0; i < enemies.size(); i++) {
-            enemies.at(i).Update(deltaTime);
-        }
+        // for (int i = 0; i < enemies.size(); i++) {
+        //     enemies.at(i).Update(deltaTime);
+        // }
+        enemy.Update(deltaTime);
         
         BeginDrawing();
         ClearBackground(RAYWHITE);
         
         player.Draw();
-        for (int i = 0; i < enemies.size(); i++) {
-            enemies.at(i).Draw();
-            DrawCircleLines(enemies.at(i).position.x + enemies.at(i).size/2, enemies.at(i).position.y + enemies.at(i).size/2, enemies.at(i).detectionRadius, LIGHTGRAY);
-            DrawCircleLines(enemies.at(i).position.x + enemies.at(i).size/2, enemies.at(i).position.y + enemies.at(i).size/2, enemies.at(i).aggroRadius, ORANGE);
-            DrawCircleLines(enemies.at(i).position.x + enemies.at(i).size/2, enemies.at(i).position.y + enemies.at(i).size/2, enemies.at(i).attackRadius, RED);
-        }
+        // for (int i = 0; i < enemies.size(); i++) {
+        //     enemies.at(i).Draw();
+        // }
+        enemy.Draw();
         
-        DrawText(TextFormat("%.0f", player.hp), 20, 20, 35, BLACK);
+        DrawText(TextFormat("%.1f", player.hp), 20, 20, 35, BLACK);
 
         if (player.hp <= 0) {
             DrawRectangle(0,0, WINDOW_WIDTH, WINDOW_HEIGHT, RAYWHITE);

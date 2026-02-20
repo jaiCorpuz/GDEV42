@@ -164,6 +164,7 @@ void PlayerAttacking::Update(float delta_time) {
         player->SetState(&player->idle);
     }
 
+    DrawCircleV(player->position, player->radius + 25, VIOLET);  // HARD CODED
 }
 
 void PlayerBlocking::Update(float delta_time) {

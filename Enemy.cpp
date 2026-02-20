@@ -8,22 +8,39 @@ void Enemy::Update(float delta_time) {
     current_state->Update(delta_time);
 
     // If Player collides with the enemy, they get damaged
+    if (CheckCollisionCircleRec(
+        playerRef->position,
+        playerRef->radius,
+        {
+            position.x,
+            position.y,
+            size,
+            size
+        })
+    ) {
+        playerRef->TakeDamage(1.0f);
+    }
+
     // if (CheckCollisionCircleRec(
     //     playerRef->position,
-    //     playerRef->radius,
+    //     playerRef->radius + 25, // HARD CODED
     //     {
     //         position.x,
     //         position.y,
     //         size,
     //         size
-    //     })
+    //     }) && 
+    //     // Check Collision with Attack
     // ) {
-    //     playerRef->TakeDamage(1.0f);
+    //     TakeDamage(1.0f);
     // }
 }
 
 void Enemy::Draw() {
     DrawRectangle(position.x, position.y, size, size, color);
+            DrawCircleLines(position.x + size/2, position.y + size/2, detectionRadius, LIGHTGRAY);
+            DrawCircleLines(position.x + size/2, position.y + size/2, aggroRadius, ORANGE);
+            DrawCircleLines(position.x + size/2, position.y + size/2, attackRadius, RED);
 }
 
 Enemy::Enemy(Vector2 pos, float siz, float spd){
@@ -41,7 +58,6 @@ Enemy::Enemy(Vector2 pos, float siz, float spd){
     attacking.enemy = &*this;
 
     SetState(&wandering);
-
 }
 
 void Enemy::SetState(EnemyState* state){
