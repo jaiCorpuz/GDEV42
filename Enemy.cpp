@@ -5,6 +5,12 @@
 #include "Player.hpp"
 
 void Enemy::Update(float delta_time) {
+    if (damageCooldownTimer > 0) {
+        damageCooldownTimer -= delta_time;
+    } else {
+        damageCooldownTimer = 0;
+    }
+
     current_state->Update(delta_time);
 
     // If Player collides with the enemy, they get damaged
@@ -21,32 +27,36 @@ void Enemy::Update(float delta_time) {
         playerRef->TakeDamage(1.0f);
     }
 
-    // if (CheckCollisionCircleRec(
-    //     playerRef->position,
-    //     playerRef->radius + 25, // HARD CODED
-    //     {
-    //         position.x,
-    //         position.y,
-    //         size,
-    //         size
-    //     }) && 
-    //     // Check Collision with Attack
-    // ) {
-    //     TakeDamage(1.0f);
-    // }
+    if (CheckCollisionCircleRec(
+        playerRef->position,
+        playerRef->radius + 25, // HARD CODED
+        {
+            position.x,
+            position.y,
+            size,
+            size
+        }) && 
+        (dynamic_cast<PlayerAttacking*>(playerRef->GetCurrentState()))
+    ) {
+        TakeDamage();
+    }
 }
 
 void Enemy::Draw() {
     DrawRectangle(position.x, position.y, size, size, color);
-            DrawCircleLines(position.x + size/2, position.y + size/2, detectionRadius, LIGHTGRAY);
-            DrawCircleLines(position.x + size/2, position.y + size/2, aggroRadius, ORANGE);
-            DrawCircleLines(position.x + size/2, position.y + size/2, attackRadius, RED);
+    DrawCircleLines(position.x + size/2, position.y + size/2, detectionRadius, LIGHTGRAY);
+    DrawCircleLines(position.x + size/2, position.y + size/2, aggroRadius, ORANGE);
+    DrawCircleLines(position.x + size/2, position.y + size/2, attackRadius, RED);
+    DrawCircle(position.x + size/2, position.y + size/2, size/4, (hp <= 0 ? BLACK : RED));
 }
 
 Enemy::Enemy(Vector2 pos, float siz, float spd){
     position = pos;
     size = siz;
     speed = spd;
+    hp = 2.0f;
+
+    damageCooldownDuration = 1.0f;
 
     aggroRadius = 300;
     detectionRadius = 200;
@@ -71,6 +81,20 @@ void Enemy::SetState(EnemyState* state){
 
 EnemyState* Enemy::GetCurrentState(){
     return current_state;
+}
+
+void Enemy::TakeDamage() {
+    if (damageCooldownTimer > 0.0f) {
+        return;
+    }
+
+    hp -= 1.0f;
+
+    damageCooldownTimer = damageCooldownDuration;
+
+    if (hp < 0.0f) {
+        hp = 0.0f;
+    }
 }
 
 void EnemyWandering::Enter(){

@@ -61,6 +61,9 @@ public:
 
     float attackTimer;
     float attackDuration;
+    
+    float damageCooldownTimer;
+    float damageCooldownDuration;
 
     Vector2 dashDirection;
     Vector2 lockedTargetPosition;
@@ -92,6 +95,7 @@ public:
 
     EnemyState* GetCurrentState();
 
+    void TakeDamage();
 };
 
 
