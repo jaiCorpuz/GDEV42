@@ -31,7 +31,9 @@ int main() {
         // for (int i = 0; i < enemies.size(); i++) {
         //     enemies.at(i).Update(deltaTime);
         // }
-        enemy.Update(deltaTime);
+        if (enemy.alive) {
+            enemy.Update(deltaTime);
+        }
         
         BeginDrawing();
         ClearBackground(RAYWHITE);

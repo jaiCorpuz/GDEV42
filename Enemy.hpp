@@ -59,9 +59,6 @@ public:
     Vector2 velocity;
     Vector2 acceleration;
     float speed;
-
-    float attackTimer;
-    float attackDuration;
     
     float damageCooldownTimer;
     float damageCooldownDuration;

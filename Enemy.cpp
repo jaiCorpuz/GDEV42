@@ -30,15 +30,13 @@ void Enemy::Update(float delta_time) {
         playerRef->TakeDamage(1.0f);
     }
 
-    if (CheckCollisionCircleRec(
+    
+    if (CheckCollisionCircles(
         playerRef->position,
-        playerRef->radius + 25, // HARD CODED
-        {
-            position.x,
-            position.y,
-            size,
-            size
-        }) && 
+        playerRef->radius + 25,
+        position,
+        (size * sqrt(2))/2
+        ) && 
         (dynamic_cast<PlayerAttacking*>(playerRef->GetCurrentState()))
     ) {
         TakeDamage();
@@ -58,19 +56,17 @@ void Enemy::Draw() {
         size / 2.0f
     };
 
-    DrawRectanglePro(
-        dest,
-        origin,
-        rotation * RAD2DEG,
-        color
-    );
-
+    
     if (alive) {
-        DrawRectangle(position.x, position.y, size, size, color);
-        DrawCircleLines(position.x + size/2, position.y + size/2, detectionRadius, LIGHTGRAY);
-        DrawCircleLines(position.x + size/2, position.y + size/2, aggroRadius, ORANGE);
-        DrawCircleLines(position.x + size/2, position.y + size/2, attackRadius, RED);
-        DrawCircle(position.x + size/2, position.y + size/2, size/4, (hp <= 0 ? BLACK : RED));
+        DrawRectanglePro(
+            dest,
+            origin,
+            rotation * RAD2DEG,
+            color
+        );
+        DrawCircleLines(position.x, position.y, detectionRadius, LIGHTGRAY);
+        DrawCircleLines(position.x, position.y, aggroRadius, ORANGE);
+        DrawCircleLines(position.x, position.y, attackRadius, RED);
     }
 }
 
