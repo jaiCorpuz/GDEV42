@@ -59,15 +59,16 @@ public:
     Vector2 acceleration;
     float speed;
 
-    float attackTimer;
-    float attackDuration;
+    float attackTimer = 0.0f;
+    float attackDuration = 1.0f;
+
+    float rotation = 0.0f;
 
     Vector2 dashDirection;
     Vector2 lockedTargetPosition;
 
-    float dashSpeed = 400.0f;
-    float dashTimer = 0.3f;
-    float dashDuration = 0.0f;
+    float dashTimer = 0.0f;
+    float dashDuration = 0.3f;
     float readyTimer;
 
     //the detection radii's
