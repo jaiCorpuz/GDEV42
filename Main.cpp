@@ -13,10 +13,10 @@ static ios_base::Init iostream_initializer;
 const float WINDOW_WIDTH(1280);
 const float WINDOW_HEIGHT(720);
 const float playerSize = 20.0f;
-const float tileScale = 6.0f;
+const float tileScale = 2.0f;
 
-Vector2 minEdge = {-200.0f, -400.0f};
-Vector2 maxEdge = {1000.0f, 1000.0f};
+Vector2 minEdge = {-500.0f, -500.0f};
+Vector2 maxEdge = {1780.0f, 1220.0f};
 
 struct TileType {
     Rectangle tile;
@@ -30,7 +30,7 @@ int main() {
 
     SetTargetFPS(60.0f);
     
-    Vector2 position = {400, 300};
+    Vector2 position = {WINDOW_WIDTH/2, WINDOW_HEIGHT/2};
 
     int cam_type = 0;
     Camera2D camera_view ={0};
@@ -61,10 +61,12 @@ int main() {
             stream >> count;
             for (int i = 0; i < count; i++) {
                 float x, y, w, h;
+                int collidable;
                 getline(file, line);
                 istringstream tileStream(line);
-                tileStream >> x >> y >> w >> h;
-                tileMap.push_back({x, y, w, h});
+                tileStream >> x >> y >> w >> h >> collidable;
+                tileTypes.push_back({{x, y, w, h}, (bool) collidable});
+                tileMap.push_back({x, y, w, h}); // ADD THIS LINE
             }
         }
         else if (key == "GRID") {
@@ -83,7 +85,6 @@ int main() {
 
     Texture2D tileSet = LoadTexture(imageName.c_str());
 
-
     while (!WindowShouldClose()) {
         float delta_time = GetFrameTime();
 
@@ -100,7 +101,7 @@ int main() {
             position.x += 200 * delta_time;
         }
 
-        position = Vector2Clamp(position, {minEdge.x +50, minEdge.y +50}, {maxEdge.x - 50, maxEdge.y - 50});
+        position = Vector2Clamp(position, {minEdge.x +30, minEdge.y +30}, {maxEdge.x - 30, maxEdge.y - 30});
 
         camera_view.target = position;
 
@@ -155,7 +156,7 @@ int main() {
         // Draw UI after EndMode2D
         EndDrawing();
     }
-    // UnloadTexture(background);
+    UnloadTexture(tileSet);
     CloseWindow();
     return 0;
 }
