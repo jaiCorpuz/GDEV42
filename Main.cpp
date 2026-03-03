@@ -13,7 +13,6 @@ static ios_base::Init iostream_initializer;
 const float WINDOW_WIDTH(1280);
 const float WINDOW_HEIGHT(720);
 const float playerSize = 20.0f;
-const float tileScale = 2.0f;
 
 Vector2 minEdge = {-500.0f, -500.0f};
 Vector2 maxEdge = {1780.0f, 1220.0f};
@@ -43,6 +42,7 @@ int main() {
     vector<Rectangle> tileMap;
     vector<vector<int>> grid;
     vector<Vector2> enemies;
+    float tileScale;
     int gridColumns = 0, gridRows = 0;
 
     ifstream file("settings.txt");
@@ -56,6 +56,9 @@ int main() {
         if (key == "IMAGE_NAME") {
             stream >> imageName;
         } 
+        else if (key == "SCALE") {
+            stream >> tileScale;
+        }
         else if (key == "TILE_COUNT") {
             int count;
             stream >> count;
@@ -146,7 +149,7 @@ int main() {
                         tile.height * tileScale
                     };
 
-                    DrawTexturePro(tileSet, tile, position, {0, 0}, 0.0f, WHITE);
+                    DrawTexturePro(tileSet, tile, position, {500, 500}, 0.0f, WHITE);
                 }
             }
         }
@@ -161,4 +164,4 @@ int main() {
     return 0;
 }
 
-// clang++ Main.cpp libraylib.a -std=c++17 \-framework Cocoa -framework IOKit -framework CoreVideo -framework OpenGL -framework Foundation -o map
+// clang++ Main.cpp libraylib.a -std=c++17 \-framework Cocoa -framework IOKit -framework CoreVideo -framework OpenGL -framework Foundation -o level
