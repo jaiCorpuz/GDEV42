@@ -14,13 +14,45 @@ const float WINDOW_WIDTH(1280);
 const float WINDOW_HEIGHT(720);
 const float playerSize = 20.0f;
 
-Vector2 minEdge = {-500.0f, -500.0f};
-Vector2 maxEdge = {1780.0f, 1220.0f};
+Vector2 minEdge = {0.0f, 0.0f};
+Vector2 maxEdge = {2150.0f, 1440.0f};
 
 struct TileType {
-    Rectangle tile;
-    bool isCollider;
+    Rectangle source;
+    bool isCollidable;
 };
+
+bool CheckTileCollision(
+    Vector2 testPosition,
+    float radius,
+    const vector<vector<int>>& grid,
+    const vector<TileType>& tileTypes,
+    float tileScale,
+    int gridRows,
+    int gridColumns
+) {
+    for (int y = 0; y < gridRows; y++) {
+        for (int x = 0; x < gridColumns; x++) {
+
+            int id = grid[y][x];
+
+            if (tileTypes[id].isCollidable) {
+
+                Rectangle tileRect = {
+                    (float)x * (tileTypes[id].source.width * tileScale),
+                    (float)y * (tileTypes[id].source.height * tileScale),
+                    tileTypes[id].source.width * tileScale,
+                    tileTypes[id].source.height * tileScale
+                };
+
+                if (CheckCollisionCircleRec(testPosition, radius, tileRect)) {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
 
 
 int main() {
@@ -29,25 +61,24 @@ int main() {
 
     SetTargetFPS(60.0f);
     
-    Vector2 position = {WINDOW_WIDTH/2, WINDOW_HEIGHT/2};
+    string imageName;
+    vector<TileType> tileTypes;
+    vector<Rectangle> tileMap;
+    vector<vector<int>> grid;
+    vector<Vector2> enemies;
+    Vector2 position;
+    float tileScale;
+    int gridColumns = 0, gridRows = 0;
+    
+    ifstream file("settings.txt");
+    string line;
 
     int cam_type = 0;
     Camera2D camera_view ={0};
     camera_view.target = position;
     camera_view.offset = {WINDOW_WIDTH /2 , WINDOW_HEIGHT / 2};
     camera_view.zoom = 1.0f;
-
-    string imageName;
-    vector<TileType> tileTypes;
-    vector<Rectangle> tileMap;
-    vector<vector<int>> grid;
-    vector<Vector2> enemies;
-    float tileScale;
-    int gridColumns = 0, gridRows = 0;
-
-    ifstream file("settings.txt");
-    string line;
-
+    
     while (getline(file, line)) {
         istringstream stream(line);
         string key;
@@ -58,6 +89,9 @@ int main() {
         } 
         else if (key == "SCALE") {
             stream >> tileScale;
+        }
+        else if (key == "PLAYER_START") {
+            stream >> position.x >> position.y;
         }
         else if (key == "TILE_COUNT") {
             int count;
@@ -90,18 +124,30 @@ int main() {
 
     while (!WindowShouldClose()) {
         float delta_time = GetFrameTime();
-
-        if(IsKeyDown(KEY_W)) {
-            position.y -= 200 * delta_time;
-        }
+        float speed = 200 * delta_time;
+        
+        Vector2 testPosition = position;
         if(IsKeyDown(KEY_A)) {
-            position.x -= 200 * delta_time;
-        }
-        if(IsKeyDown(KEY_S)) {
-            position.y += 200 * delta_time;
+            testPosition.x -= 200 * delta_time;
         }
         if(IsKeyDown(KEY_D)) {
-            position.x += 200 * delta_time;
+            testPosition.x += 200 * delta_time;
+        }
+
+        if (!CheckTileCollision(testPosition, playerSize, grid, tileTypes, tileScale, gridRows, gridColumns)) {
+            position.x = testPosition.x;
+        }
+
+        testPosition = position;
+        if(IsKeyDown(KEY_W)) {
+            testPosition.y -= 200 * delta_time;
+        }
+        if(IsKeyDown(KEY_S)) {
+            testPosition.y += 200 * delta_time;
+        }
+
+        if(!CheckTileCollision(testPosition, playerSize, grid, tileTypes, tileScale, gridRows, gridColumns)) {
+            position.y = testPosition.y;
         }
 
         position = Vector2Clamp(position, {minEdge.x +30, minEdge.y +30}, {maxEdge.x - 30, maxEdge.y - 30});
@@ -131,30 +177,30 @@ int main() {
             camera_view.offset.y = WINDOW_HEIGHT - (maxEdge.y - camera_view.target.y);
         }
 
+
+
         BeginDrawing();
         BeginMode2D(camera_view);
         ClearBackground(RAYWHITE);
 
+
         for (int y = 0; y < gridRows; y++) {
             for (int x = 0; x < gridColumns; x++) {
                 int tileID = grid[y][x];
-
                 if (tileID >= 0 && tileID < tileMap.size()) {
-                    Rectangle tile = tileMap[tileID];
-
+                    TileType tile = tileTypes[tileID];
                     Rectangle position = {
-                        (float) x * (tile.width*tileScale),
-                        (float) y * (tile.height*tileScale),
-                        tile.width * tileScale,
-                        tile.height * tileScale
+                        (float) x * (tile.source.width*tileScale),
+                        (float) y * (tile.source.height*tileScale),
+                        tile.source.width * tileScale,
+                        tile.source.height * tileScale
                     };
-
-                    DrawTexturePro(tileSet, tile, position, {500, 500}, 0.0f, WHITE);
+                    DrawTexturePro(tileSet, tile.source, position, {0, 0}, 0.0f, WHITE);
                 }
             }
         }
         // DrawRectangle(120, 100, 40, 80, BLUE);
-        DrawCircle(position.x, position.y, 30.0f, DARKBLUE);
+        DrawCircle(position.x, position.y, playerSize, DARKBLUE);
         EndMode2D();
         // Draw UI after EndMode2D
         EndDrawing();
