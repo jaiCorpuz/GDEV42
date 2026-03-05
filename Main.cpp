@@ -6,6 +6,9 @@
 #include <vector>
 #include <string>
 
+#include "Player.cpp"
+#include "Enemy.cpp"
+
 using namespace std;
 
 static ios_base::Init iostream_initializer;
@@ -17,10 +20,7 @@ const float playerSize = 20.0f;
 Vector2 minEdge = {0.0f, 0.0f};
 Vector2 maxEdge = {2150.0f, 1440.0f};
 
-struct TileType {
-    Rectangle source;
-    bool isCollidable;
-};
+vector<TileType> tileTypes;
 
 bool CheckTileCollision(
     Vector2 testPosition,
@@ -54,6 +54,23 @@ bool CheckTileCollision(
     return false;
 }
 
+//Collision handler for both player and enemy
+void HandleCollisions(Player& player, vector<Enemy>& enemies) {
+    for (auto& e : enemies) {
+        if (!e.alive) continue;
+
+        if (CheckCollisionCircleRec(player.position, player.radius, {e.position.x, e.position.y, e.size, e.size})) {
+            player.TakeDamage(1.0f);
+        }
+
+        if (dynamic_cast<PlayerAttacking*>(player.GetCurrentState())) {
+            float distance = Vector2Distance(player.position, e.position);
+            if (distance < player.radius + e.size / 2.0f) {
+                e.TakeDamage();
+            }
+        }
+    }
+}
 
 int main() {
     SetConfigFlags(FLAG_WINDOW_HIGHDPI);
@@ -69,15 +86,10 @@ int main() {
     Vector2 position;
     float tileScale;
     int gridColumns = 0, gridRows = 0;
+    Vector2 playerPosition;
     
     ifstream file("settings.txt");
     string line;
-
-    int cam_type = 0;
-    Camera2D camera_view ={0};
-    camera_view.target = position;
-    camera_view.offset = {WINDOW_WIDTH /2 , WINDOW_HEIGHT / 2};
-    camera_view.zoom = 1.0f;
     
     while (getline(file, line)) {
         istringstream stream(line);
@@ -92,6 +104,7 @@ int main() {
         }
         else if (key == "PLAYER_START") {
             stream >> position.x >> position.y;
+            playerPosition = position;
         }
         else if (key == "TILE_COUNT") {
             int count;
@@ -122,37 +135,32 @@ int main() {
 
     Texture2D tileSet = LoadTexture(imageName.c_str());
 
+    // camera settings
+    int cam_type = 0;
+    Camera2D camera_view ={0};
+    camera_view.target = playerPosition;
+    camera_view.offset = {WINDOW_WIDTH /2 , WINDOW_HEIGHT / 2};
+    camera_view.zoom = 1.0f;
+
+    // player settings
+    Player player(playerPosition, playerSize, 200.0f); //replace speed
+    player.camera = &camera_view;
+    player.grid = grid;
+    player.tileTypes = tileTypes;
+    player.tileScale = tileScale;
+    player.gridRows = gridRows;
+    player.gridColumns = gridColumns;
+
     while (!WindowShouldClose()) {
         float delta_time = GetFrameTime();
         float speed = 200 * delta_time;
         
-        Vector2 testPosition = position;
-        if(IsKeyDown(KEY_A)) {
-            testPosition.x -= 200 * delta_time;
-        }
-        if(IsKeyDown(KEY_D)) {
-            testPosition.x += 200 * delta_time;
-        }
+        player.Update(delta_time);
 
-        if (!CheckTileCollision(testPosition, playerSize, grid, tileTypes, tileScale, gridRows, gridColumns)) {
-            position.x = testPosition.x;
-        }
+        player.position = Vector2Clamp(player.position, {minEdge.x +30, minEdge.y +30}, {maxEdge.x - 30, maxEdge.y - 30});
 
-        testPosition = position;
-        if(IsKeyDown(KEY_W)) {
-            testPosition.y -= 200 * delta_time;
-        }
-        if(IsKeyDown(KEY_S)) {
-            testPosition.y += 200 * delta_time;
-        }
-
-        if(!CheckTileCollision(testPosition, playerSize, grid, tileTypes, tileScale, gridRows, gridColumns)) {
-            position.y = testPosition.y;
-        }
-
-        position = Vector2Clamp(position, {minEdge.x +30, minEdge.y +30}, {maxEdge.x - 30, maxEdge.y - 30});
-
-        camera_view.target = position;
+        camera_view.target = player.position;
+        cout << "Player position: (" << player.position.x << ", " << player.position.y << ")\n";
 
         camera_view.offset = {WINDOW_WIDTH /2 , WINDOW_HEIGHT / 2};
 
@@ -177,8 +185,6 @@ int main() {
             camera_view.offset.y = WINDOW_HEIGHT - (maxEdge.y - camera_view.target.y);
         }
 
-
-
         BeginDrawing();
         BeginMode2D(camera_view);
         ClearBackground(RAYWHITE);
@@ -199,8 +205,8 @@ int main() {
                 }
             }
         }
-        // DrawRectangle(120, 100, 40, 80, BLUE);
-        DrawCircle(position.x, position.y, playerSize, DARKBLUE);
+
+        player.Draw();
         EndMode2D();
         // Draw UI after EndMode2D
         EndDrawing();
@@ -211,3 +217,5 @@ int main() {
 }
 
 // clang++ Main.cpp libraylib.a -std=c++17 \-framework Cocoa -framework IOKit -framework CoreVideo -framework OpenGL -framework Foundation -o level
+//  C:\raylib\w64devkit\w64devkit.exe
+// HII SIRRR!! - Avielle: cd Documents/"[Y4] Second Semester 2026"/GDEV42/GDEV42 || g++ Main.cpp -o out -I raylib/ -L raylib/ -lraylib -lopengl32 -lgdi32 -lwinmm
