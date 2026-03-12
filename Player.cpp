@@ -194,12 +194,15 @@ void PlayerBlocking::Update(float delta_time) {
 
 void PlayerDodging::Update(float delta_time) {
     player->dodgeTimer -= delta_time;
-
-    //When dodging, move player in direction faster
-    player->position = Vector2Add(
+    
+    Vector2 newPosition = Vector2Add(
         player->position,
         Vector2Scale(player->dodgeDirection, player->speed * 2 * delta_time)
-    );
+    );//When dodging, move player in direction faster
+
+    if (!CheckTileCollision(newPosition, player->radius, player->grid, player->tileTypes, player->tileScale, player->gridRows, player->gridColumns)) {
+        player->position = newPosition;
+    }
 
     //If dodge timer finished, set state to idle
     if (player->dodgeTimer <= 0.0f) {
