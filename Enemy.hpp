@@ -79,10 +79,16 @@ public:
     float detectionRadius; //second middle
     float attackRadius; //innermost
 
-    EnemyWandering wandering;
-    EnemyChasing chasing;
-    EnemyReadyingAttack readyingAttack;
-    EnemyAttacking attacking;
+    vector<vector<int>> grid;
+    vector<TileType> tileTypes;
+    float tileScale;
+    int gridRows;
+    int gridColumns;
+
+    EnemyWandering wandering = EnemyWandering();
+    EnemyChasing chasing = EnemyChasing();
+    EnemyReadyingAttack readyingAttack = EnemyReadyingAttack();
+    EnemyAttacking attacking = EnemyAttacking();
 
     Player* playerRef = nullptr;
 

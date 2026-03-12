@@ -4,6 +4,16 @@
 #include "Enemy.hpp"
 #include "Player.hpp"
 
+bool CheckTileCollision(
+    Vector2 testPosition,
+    float radius,
+    const std::vector<std::vector<int>>& grid,
+    const std::vector<TileType>& tileTypes,
+    float tileScale,
+    int gridRows,
+    int gridColumns
+);
+
 void Enemy::Update(float delta_time) {
     if (damageCooldownTimer > 0) {
         damageCooldownTimer -= delta_time;
@@ -167,10 +177,14 @@ void EnemyAttacking::Exit(){}
 
 void EnemyWandering::Update(float delta_time){
     // Move le enemie
-    enemy->position = Vector2Add(
+    Vector2 newPosition = Vector2Add(
         enemy->position,
         Vector2Scale(enemy->velocity, enemy->speed * delta_time)
     );
+
+    if (!CheckTileCollision(newPosition, enemy->size, enemy->grid, enemy->tileTypes, enemy->tileScale, enemy->gridRows, enemy->gridColumns)) {
+        enemy->position = newPosition;
+    }
 
     // Enemy doesnt go beyond the window space
     if (enemy->position.x < 0 || enemy->position.x > 1280){
@@ -221,8 +235,11 @@ void EnemyChasing::Update(float delta_time){
     //The enemy chases the player, rotating its body towards the Player’s direction
     playerDirection = Vector2Normalize(playerDirection);
     enemy->rotation = atan2f(playerDirection.y, playerDirection.x);
-    enemy->position = Vector2Add(enemy->position, Vector2Scale(playerDirection, enemy->speed * delta_time));
+    Vector2 newPosition = Vector2Add(enemy->position, Vector2Scale(playerDirection, enemy->speed * delta_time));
 
+    if (!CheckTileCollision(newPosition, enemy->size, enemy->grid, enemy->tileTypes, enemy->tileScale, enemy->gridRows, enemy->gridColumns)) {
+        enemy->position = newPosition;
+    }
 }
 
 void EnemyReadyingAttack::Update(float delta_time){
@@ -242,8 +259,10 @@ void EnemyReadyingAttack::Update(float delta_time){
 
 void EnemyAttacking::Update(float delta_time){
     enemy->dashTimer -= delta_time;
-    enemy->position = Vector2Add(enemy->position, Vector2Scale(enemy->dashDirection, enemy->speed * 4.5 * delta_time));
-    
+    Vector2 newPosition = Vector2Add(enemy->position, Vector2Scale(enemy->dashDirection, enemy->speed * 4.5 * delta_time));
+    if (!CheckTileCollision(newPosition, enemy->size, enemy->grid, enemy->tileTypes, enemy->tileScale, enemy->gridRows, enemy->gridColumns)) {
+        enemy->position = newPosition;
+    }
     if (enemy->dashTimer <= 0.0f)
         {
             enemy->attackTimer = enemy->attackDuration;
