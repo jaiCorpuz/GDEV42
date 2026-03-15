@@ -8,7 +8,7 @@
 using namespace std;
 
 const int GRID_SIZE = 10;
-const int CELL_SIZE = 60;
+const int CELL_SIZE = 100;
 const int SCREEN_SIZE = GRID_SIZE * CELL_SIZE;
 
 enum RoomType
@@ -72,13 +72,18 @@ int CountOccupiedNeighbors(Cell c)
     return count;
 }
 
+int gridDist[GRID_SIZE][GRID_SIZE];
 //Generating the dungeon based on the steps in the slides and the class demo 
 void GenerateDungeon()
 {
     //Clear the grid and reset the dungeon (for the R thing)
     for (int x = 0; x < GRID_SIZE; x++)
-        for (int y = 0; y < GRID_SIZE; y++)
+    {
+        for (int y = 0; y < GRID_SIZE; y++) {
             grid[x][y] = EMPTY;
+            gridDist[x][y] = 0;
+        }
+    }
 
     //10-20 inclusive rooms
     int targetRooms = 10 + rand() % 11; 
@@ -88,6 +93,7 @@ void GenerateDungeon()
     int startY = rand() % GRID_SIZE;
 
     grid[startX][startY] = START;
+    gridDist[startX][startY] = 0;
 
     queue<Cell> q;
     q.push({startX, startY});
@@ -125,6 +131,7 @@ void GenerateDungeon()
                 //if the current cell WAS an END room, then it would become a regular room
                 if (grid[current.x][current.y] == END)
                     grid[current.x][current.y] = REGULAR;
+                    gridDist[n.x][n.y] = gridDist[current.x][current.y] + 1;
 
                 if (roomCount >= targetRooms)
                     break;
@@ -185,6 +192,27 @@ void GenerateDungeon()
         }
     }
 
+    int maxDist = -1;
+    Cell bossCell = {-1, -1};
+
+    for (int x = 0; x < GRID_SIZE; x++)
+    {
+        for (int y = 0; y < GRID_SIZE; y++)
+        {
+            if (grid[x][y] == END)
+            {
+                if (gridDist[x][y] > maxDist)
+                {
+                    maxDist = gridDist[x][y];
+                    bossCell ={x, y};
+                }
+            }
+        }
+    }
+    if (bossCell.x != -1)
+        grid[bossCell.x][bossCell.y] = BOSS;
+
+
 }
 
 Color GetRoomColor(RoomType type)
@@ -202,7 +230,7 @@ Color GetRoomColor(RoomType type)
 int main()
 {
     srand(time(NULL));
-
+    SetConfigFlags(FLAG_WINDOW_HIGHDPI);
     InitWindow(SCREEN_SIZE, SCREEN_SIZE, "Dungeon Generator");
 
     GenerateDungeon();
@@ -227,7 +255,9 @@ int main()
 
                 //draw the neighbor count (can be removed in future)
                 int neighbors = CountOccupiedNeighbors({x, y});
-                DrawText(TextFormat("%d", neighbors), drawX + 20, drawY + 20, 20, WHITE);
+                DrawText(TextFormat("%d", neighbors), drawX + 15, drawY + 15, 20, WHITE);
+                // draw gridDist count
+                DrawText(TextFormat("%d",gridDist[x][y]), drawX + 75, drawY + 75, 20, WHITE);
 
             }
         }
@@ -238,6 +268,6 @@ int main()
     CloseWindow();
 }
 
-// clang++ Main.cpp libraylib.a -std=c++17 \-framework Cocoa -framework IOKit -framework CoreVideo -framework OpenGL -framework Foundation -o level
+// clang++ Main.cpp libraylib.a -std=c++17 \-framework Cocoa -framework IOKit -framework CoreVideo -framework OpenGL -framework Foundation -o dungeon
 //  C:\raylib\w64devkit\w64devkit.exe
 // HII SIRRR!! - Avielle: cd Documents/"[Y4] Second Semester 2026"/GDEV42/GDEV42 || g++ Main.cpp -o out -I raylib/ -L raylib/ -lraylib -lopengl32 -lgdi32 -lwinmm
