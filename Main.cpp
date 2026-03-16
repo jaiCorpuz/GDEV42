@@ -148,34 +148,34 @@ int main() {
             playerPosition = position;
         } else if (key == "ENEMY_COUNT") {
             stream >> enemy_count;
-            // for (int i = 0; i < enemy_count; i++) {
-            //     float x, y;
-            //     getline(settings, line);
-            //     istringstream enemyStream(line);
-            //     enemyStream >> x >> y;
-            //     enemies.push_back(Enemy({x,y}, 25, 10));
-            // }
-            float ex = 0, ey = 0;
-            getline(save, line);
-            istringstream enemyStream1(line);
-            enemyStream1 >> ex >> ey;
-            std::cout << " " << ex << " " << ey << std::endl;
-            e1.position.x = ex;
-            e1.position.y = ey;
+            for (int i = 0; i < enemy_count; i++) {
+                float x, y;
+                getline(settings, line);
+                istringstream enemyStream(line);
+                enemyStream >> x >> y;
+                enemies.push_back(Enemy({x,y}, 25, 10));
+            }
+            // float ex = 0, ey = 0;
+            // getline(save, line);
+            // istringstream enemyStream1(line);
+            // enemyStream1 >> ex >> ey;
+            // std::cout << " " << ex << " " << ey << std::endl;
+            // e1.position.x = ex;
+            // e1.position.y = ey;
 
-            getline(save, line);
-            istringstream enemyStream2(line);
-            enemyStream2 >> ex >> ey;
-            std::cout << " " << ex << " " << ey << std::endl;
-            e2.position.x = ex;
-            e2.position.y = ey;
+            // getline(save, line);
+            // istringstream enemyStream2(line);
+            // enemyStream2 >> ex >> ey;
+            // std::cout << " " << ex << " " << ey << std::endl;
+            // e2.position.x = ex;
+            // e2.position.y = ey;
 
-            getline(save, line);
-            istringstream enemyStream3(line);
-            enemyStream3 >> ex >> ey;
-            std::cout << " " << ex << " " << ey << std::endl;
-            e3.position.x = ex;
-            e3.position.y = ey;
+            // getline(save, line);
+            // istringstream enemyStream3(line);
+            // enemyStream3 >> ex >> ey;
+            // std::cout << " " << ex << " " << ey << std::endl;
+            // e3.position.x = ex;
+            // e3.position.y = ey;
         }
 
     }
@@ -199,30 +199,30 @@ int main() {
     player.gridRows = gridRows;
     player.gridColumns = gridColumns;
     
-    e1.grid = grid;
-    e1.tileTypes = tileTypes;
-    e1.tileScale = tileScale;
-    e1.gridRows = gridRows;
-    e1.gridColumns = gridColumns;
+    // e1.grid = grid;
+    // e1.tileTypes = tileTypes;
+    // e1.tileScale = tileScale;
+    // e1.gridRows = gridRows;
+    // e1.gridColumns = gridColumns;
 
-    e2.grid = grid;
-    e2.tileTypes = tileTypes;
-    e2.tileScale = tileScale;
-    e2.gridRows = gridRows;
-    e2.gridColumns = gridColumns;
+    // e2.grid = grid;
+    // e2.tileTypes = tileTypes;
+    // e2.tileScale = tileScale;
+    // e2.gridRows = gridRows;
+    // e2.gridColumns = gridColumns;
 
-    e3.grid = grid;
-    e3.tileTypes = tileTypes;
-    e3.tileScale = tileScale;
-    e3.gridRows = gridRows;
-    e3.gridColumns = gridColumns;
+    // e3.grid = grid;
+    // e3.tileTypes = tileTypes;
+    // e3.tileScale = tileScale;
+    // e3.gridRows = gridRows;
+    // e3.gridColumns = gridColumns;
 
-    // for (int i = 0; i < enemy_count; i++) {
-    //     enemies.at(i).playerRef = &player;
-    // }
-    e1.playerRef = &player;
-    e2.playerRef = &player;
-    e3.playerRef = &player;
+    for (int i = 0; i < enemy_count; i++) {
+        enemies.at(i).playerRef = &player;
+    }
+    // e1.playerRef = &player;
+    // e2.playerRef = &player;
+    // e3.playerRef = &player;
     
     while (!WindowShouldClose()) {
         float delta_time = GetFrameTime();
@@ -231,11 +231,11 @@ int main() {
         player.Update(delta_time);
         for (int i = 0; i < enemy_count; i++)
         {
-            // enemies.at(i).Update(delta_time);
+            enemies.at(i).Update(delta_time);
         }
-        e1.Update(delta_time);
-        e2.Update(delta_time);
-        e3.Update(delta_time);
+        // e1.Update(delta_time);
+        // e2.Update(delta_time);
+        // e3.Update(delta_time);
 
         player.position = Vector2Clamp(player.position, {minEdge.x +30, minEdge.y +30}, {maxEdge.x - 30, maxEdge.y - 30});
 
@@ -287,13 +287,13 @@ int main() {
         }
 
         player.Draw();
-        // for (int i = 0; i < enemy_count; i++)
-        // {
-        //     enemies.at(0).Draw();
-        // }
-        e1.Draw();
-        e2.Draw();
-        e3.Draw();
+        for (int i = 0; i < enemy_count; i++)
+        {
+            enemies.at(i).Draw();
+        }
+        // e1.Draw();
+        // e2.Draw();
+        // e3.Draw();
         EndMode2D();
         // Draw UI after EndMode2D
         EndDrawing();
@@ -304,13 +304,13 @@ int main() {
         ofstream save_file("save_file.txt");
         save_file << "PLAYER_START " << player.position.x << " " << player.position.y << " " << std::endl;
         save_file << "ENEMY_COUNT " << enemy_count << std::endl;
-        // for (int i = 0; i < enemy_count; i++)
-        // {
-        //     save_file << enemies.at(i).position.x << " " << enemies.at(i).position.y << std::endl;
-        // }
-        save_file << e1.position.x << " " << e1.position.y << std::endl;
-        save_file << e2.position.x << " " << e2.position.y << std::endl;
-        save_file << e3.position.x << " " << e3.position.y << std::endl;
+        for (int i = 0; i < enemy_count; i++)
+        {
+            save_file << enemies.at(i).position.x << " " << enemies.at(i).position.y << std::endl;
+        }
+        // save_file << e1.position.x << " " << e1.position.y << std::endl;
+        // save_file << e2.position.x << " " << e2.position.y << std::endl;
+        // save_file << e3.position.x << " " << e3.position.y << std::endl;
         
         save_file.close();
     }
