@@ -7,6 +7,8 @@
 #include <random>
 #include <iostream>
 
+#include "Player.cpp"
+
 using namespace std;
 
 const int SCREEN_WIDTH = 768;
@@ -20,15 +22,23 @@ int main()
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "AlvarezCorpuzGregorio_Homework04");
     
     // GenerateDungeon();
+
+    Player player({0,0}, 25, 200.0f);
     
     while (!WindowShouldClose())
     {
+        float delta_time = GetFrameTime();
+
+        player.Update(delta_time);
+        
         if (IsKeyPressed(KEY_R)) {
             // GenerateDungeon();
         }
 
         BeginDrawing();
         ClearBackground(BLACK);
+        
+        player.Draw();
 
         EndDrawing();
     }

@@ -153,15 +153,6 @@ void PlayerMoving::Update(float delta_time) {
         player->position,
         Vector2Scale(player->velocity, player->speed * delta_time)
     );
-    player->camera->offset = Vector2Add(
-        player->camera->offset,
-        Vector2Scale(player->velocity, player->speed * delta_time)
-    );
-    player->camera->offset = Vector2Clamp(
-        player->camera->offset,
-        {1280 * 3 / 8, 720 * 3 / 8},
-        {1280 * 5 / 8, 720 * 5 / 8}
-    );
 
     //If Space while moving, set state to dodge 
     if(IsKeyPressed(KEY_SPACE)){
@@ -225,8 +216,6 @@ void Player::TakeDamage(float damage) {
     isInvincible = true;
     invincibleTimer = invincibleDuration;
 }
-
-
 
 float PlayerBlocking::GetDamageMult() {
     return 0.5f;
