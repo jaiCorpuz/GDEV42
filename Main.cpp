@@ -4,6 +4,8 @@
 #include <cstdlib>
 #include <ctime>
 #include <cmath>
+#include <random>
+#include <iostream>
 
 using namespace std;
 
@@ -17,7 +19,9 @@ enum RoomType
     START,
     REGULAR,
     END,
-    BOSS
+    BOSS,
+    DOOR,
+    KEY
 };
 
 struct Cell
@@ -27,6 +31,9 @@ struct Cell
 };
 
 RoomType grid[GRID_SIZE][GRID_SIZE];
+Cell bossCell;
+int startX;
+int startY;
 
 
 //IsInside the Grid because it might be negative or beyond the grid
@@ -89,8 +96,8 @@ void GenerateDungeon()
     int targetRooms = 10 + rand() % 11; 
 
     //get a random cell to make into the starting room
-    int startX = rand() % GRID_SIZE;
-    int startY = rand() % GRID_SIZE;
+    startX = rand() % GRID_SIZE;
+    startY = rand() % GRID_SIZE;
 
     grid[startX][startY] = START;
     gridDist[startX][startY] = 0;
@@ -193,7 +200,7 @@ void GenerateDungeon()
     }
 
     int maxDist = -1;
-    Cell bossCell = {-1, -1};
+    bossCell = {-1, -1};
 
     for (int x = 0; x < GRID_SIZE; x++)
     {
@@ -212,7 +219,91 @@ void GenerateDungeon()
     if (bossCell.x != -1)
         grid[bossCell.x][bossCell.y] = BOSS;
 
+}
 
+void AddDoorAndKey() {
+    int dist_from_start = gridDist[bossCell.x][bossCell.y];
+        
+    //https://en.cppreference.com/w/cpp/numeric/random/uniform_int_distribution.html
+    std::random_device rd;  // a seed source for the random number engine
+    std::mt19937 gen(rd()); // mersenne_twister_engine seeded with rd()
+    std::uniform_int_distribution<> door_distrib(3, dist_from_start-1);
+    
+    
+    int locked_room_dist = door_distrib(gen);
+    Cell door_cell = bossCell;
+    vector<Cell> visited_cells;
+    visited_cells.push_back(door_cell);
+
+    
+    while (dist_from_start > locked_room_dist) {
+        std::cout << dist_from_start << std::endl;
+        for (Cell n: GetNeighbors(door_cell)) {
+            // std::cout << "checking n: " << n.x << " " << n.y << std::endl;
+            
+            if (gridDist[n.x][n.y] < gridDist[door_cell.x][door_cell.y] && gridDist[n.x][n.y] != 0) {
+                // std::cout << "next: " << n.x << " " << n.y << std::endl;
+                dist_from_start = gridDist[door_cell.x][door_cell.y];
+                door_cell = {n.x, n.y};
+                visited_cells.push_back(door_cell);
+                break;
+            }
+        }
+        if (dist_from_start == locked_room_dist) {
+            std::cout << "placing door..." << std::endl;
+            break;
+        }
+    }
+    grid[door_cell.x][door_cell.y] = DOOR;
+    std::cout << "door: " << locked_room_dist << std::endl;
+    std::cout << "door cell: " << door_cell.x << " " <<door_cell.y << std::endl;
+    
+    bool key_search_done = false;
+    Cell key_cell = {startX, startY};
+    vector<Cell> visited_key;
+    queue<Cell> not_visited_key;
+    visited_key.push_back(door_cell);
+    not_visited_key.push(key_cell);
+    while (!not_visited_key.empty()) {
+        // std::cout << "current key search: " << key_cell.x << " " << key_cell.y << std::endl;
+        key_cell = not_visited_key.front();
+        not_visited_key.pop();
+        visited_key.push_back(key_cell);
+        for (Cell n: GetNeighbors(key_cell)) {
+            if (grid[n.x][n.y] == EMPTY) {
+                continue;
+            }
+            bool visited = false;
+            for (Cell v: visited_key) {
+                if (n.x == v.x && n.y == v.y) {
+                    visited = true;
+                }
+            }
+            if (!visited && gridDist[n.x][n.y] != 0) {
+                visited_key.push_back(n);
+                not_visited_key.push(n);
+            }
+        }
+    }
+    vector<Cell> key_candidates;
+    for (Cell c: visited_key) {
+        bool added = false;
+        for (Cell k: key_candidates) {
+            if (k.x == c.x && k.y == c.y) {
+                added = true;
+            }
+        }
+        if (!added && ((grid[c.x][c.y] != DOOR || grid[c.x][c.y] != START) && grid[c.x][c.y] != EMPTY && grid[c.x][c.y] == REGULAR)) {
+            key_candidates.push_back(c);
+            // std::cout << "possible key: " << c.x << " " << c.y;
+        }
+    }
+    
+    std::uniform_int_distribution<> key_distrib(0, key_candidates.size()-1);
+    int random_key = key_distrib(gen);
+    grid[key_candidates.at(random_key).x][key_candidates.at(random_key).y] = KEY;
+    
+    
 }
 
 Color GetRoomColor(RoomType type)
@@ -223,22 +314,33 @@ Color GetRoomColor(RoomType type)
         case REGULAR: return LIGHTGRAY;
         case END: return ORANGE;
         case BOSS: return RED;
+        case DOOR: return BLUE;
+        case KEY: return SKYBLUE;
         default: return DARKGRAY;
     }
 }
 
 int main()
 {
+    static std::ios_base::Init iostream_initializer;
     srand(time(NULL));
     SetConfigFlags(FLAG_WINDOW_HIGHDPI);
     InitWindow(SCREEN_SIZE, SCREEN_SIZE, "Dungeon Generator");
-
+    
     GenerateDungeon();
+    
+    int doors = 0;
 
     while (!WindowShouldClose())
     {
-        if (IsKeyPressed(KEY_R))
+        if (IsKeyPressed(KEY_R)) {
             GenerateDungeon();
+            doors = 0;
+        }
+        if (IsKeyPressed(KEY_E) && doors == 0) {
+            doors++;
+            AddDoorAndKey();
+        }
 
         BeginDrawing();
         ClearBackground(BLACK);
