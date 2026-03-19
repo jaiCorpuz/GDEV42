@@ -1,25 +1,87 @@
 #include "raylib.h"
-#include <vector>
-#include <queue>
 #include <cstdlib>
 #include <ctime>
 #include <cmath>
 #include <random>
 #include <iostream>
+#include <fstream>
+#include <sstream>
 
 #include "Player.cpp"
 
 using namespace std;
 
-const int SCREEN_WIDTH = 768;
-const int SCREEN_HEIGHT = 640;
+const int SCREEN_TILE_WIDTH = 12;
+const int SCREEN_TILE_HEIGHT = 10;
+// const int SCREEN_WIDTH = 768;
+// const int SCREEN_HEIGHT = 640;
+
+struct Tile {
+    Rectangle source;
+    bool isCollidable;
+
+    Tile(Rectangle source, bool isCollidable) {
+        this->source = source;
+        this->isCollidable = isCollidable;
+    }
+};
 
 int main()
 {
     static std::ios_base::Init iostream_initializer;
     srand(time(NULL));
     SetConfigFlags(FLAG_WINDOW_HIGHDPI);
-    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "AlvarezCorpuzGregorio_Homework04");
+    
+    // Get tilemap information
+    
+    string tilemap_filename;
+    int tile_size;
+    float tile_scale;
+    vector<Tile> tile_types;
+    
+    ifstream settings("tilemap.txt");
+    string line;
+    
+    while (getline(settings, line)) {
+        istringstream stream(line);
+        string key;
+        stream >> key;
+        
+        if (key == "IMAGE_NAME") {
+            stream >> tilemap_filename;
+        } 
+        else if (key == "TILE_SIZE") {
+            stream >> tile_size;
+        }
+        else if (key == "TILE_SCALE") {
+            stream >> tile_scale;
+        }
+        else if (key == "TILE_COUNT") {
+            int count;
+            stream >> count;
+            for (int i = 0; i < count; i++) {
+                float x, y;
+                int collidable;
+                getline(settings, line);
+                istringstream tile_stream(line);
+                tile_stream >> x >> y >> collidable;
+                Rectangle tile_source = {
+                    x*tile_size,
+                    y*tile_size,
+                    (float) tile_size,
+                    (float) tile_size,
+                };
+                tile_types.push_back(Tile(tile_source, (bool) collidable));
+            }
+        }
+    }
+    settings.close();
+
+    int screen_width = SCREEN_TILE_WIDTH * tile_size * tile_scale;
+    int screen_height = SCREEN_TILE_HEIGHT * tile_size * tile_scale;
+    InitWindow(screen_width, screen_height, "AlvarezCorpuzGregorio_Homework04");
+    
+    Texture2D tilemap = LoadTexture(tilemap_filename.c_str());
     
     // GenerateDungeon();
 
@@ -38,10 +100,42 @@ int main()
         BeginDrawing();
         ClearBackground(BLACK);
         
+        // DrawTexture(tilemap, 0,0, WHITE);
+        for (int i = 0; i < SCREEN_TILE_HEIGHT; i++) {
+            for (int j = 0; j < SCREEN_TILE_WIDTH; j++) {
+                int tile_type = 12;
+                if (i == 0 && j == 0) {
+                    tile_type = 0;
+                } else if (i == 0 && j == SCREEN_TILE_WIDTH-1) {
+                    tile_type = 2;
+                } else if (i == SCREEN_TILE_HEIGHT-1 && j == 0) {
+                    tile_type = 5;
+                } else if (i == SCREEN_TILE_HEIGHT-1 && j == SCREEN_TILE_WIDTH-1) {
+                    tile_type = 6;
+                } else if (j == 0) {
+                    tile_type = 3;
+                } else if (i == 0 || i == SCREEN_TILE_HEIGHT-1) {
+                    tile_type = 1;
+                } else if (j == SCREEN_TILE_WIDTH-1) {
+                    tile_type = 4;
+                }
+                DrawTexturePro(
+                    tilemap,
+                    tile_types[tile_type].source,
+                    {(float)j*tile_size*tile_scale,(float)i*tile_size*tile_scale,tile_size*tile_scale, tile_size*tile_scale},
+                    {0,0},
+                    0,
+                    WHITE
+                );
+            }
+        }
+        
         player.Draw();
 
         EndDrawing();
     }
+
+    UnloadTexture(tilemap);
 
     CloseWindow();
 }
