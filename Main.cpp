@@ -9,7 +9,8 @@
 #include <bits/stdc++.h>
 
 #include "Player.cpp"
-#include "Room.cpp"
+// #include "Room.cpp"
+// #include "Tile.cpp"
 
 using namespace std;
 
@@ -17,16 +18,6 @@ const int SCREEN_TILE_WIDTH = 12;
 const int SCREEN_TILE_HEIGHT = 10;
 // const int SCREEN_WIDTH = 768;
 // const int SCREEN_HEIGHT = 640;
-
-struct Tile {
-    Rectangle source;
-    bool isCollidable;
-
-    Tile(Rectangle source, bool isCollidable) {
-        this->source = source;
-        this->isCollidable = isCollidable;
-    }
-};
 
 int main()
 {
