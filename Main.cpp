@@ -119,54 +119,12 @@ struct Room {
     int CountOccupiedNeighbors() {
         int count = 0;
         for (Room* r : neighbors) {
-            // std::cout << "neighbor";
-            // if (r != nullptr) {
-            //     switch (r->type)
-            //     {
-            //         case START:
-            //         std::cout << " start";
-            //         break;
-            //         case END:
-            //         std::cout << " end";
-            //         break;
-            //         case REGULAR:
-            //         std::cout << " regular";
-            //         break;
-                    
-            //     default:
-            //         break;
-            //     }
-            // } else {
-            //     std::cout << " nullptr";
-            // }
             if (r != nullptr && r->type != EMPTY) {
-                // std::cout << " c";
                 count++;
             }
-            // std::cout << std::endl;
         }
         return count;
     }
-    
-    // vector<Room*> FindEndRooms(vector<Room*> room_vector) {
-    //     if (type == START) {
-    //         room_vector.push_back(this);
-    //         for (auto n: neighbors) {
-    //             if (n != nullptr) {
-    //                 FindEndRooms(room_vector);
-    //             }
-    //         }
-    //     } else if (type == END) {
-    //         room_vector.push_back(this);
-    //     } else {
-    //         for (auto n: neighbors) {
-    //             if (n != nullptr) {
-    //                 FindEndRooms(room_vector);
-    //             }
-    //         }
-    //     }
-    //     return room_vector;
-    // }
 
     vector<Room*> FindEndRooms(vector<Room*> rooms) {
         vector<Room*> end_rooms;
@@ -179,7 +137,7 @@ struct Room {
     }
 };
 
-void GenerateDungeon() {
+vector<Room*> GenerateDungeon() {
     int target_rooms = 5 + rand() % 6;
     vector<Room*> rooms;
     
@@ -260,8 +218,6 @@ void GenerateDungeon() {
     }
     std::cout << "loop exited, " << room_count << " out of " << target_rooms << " created..." << std::endl;
 
-    // Maybe have to add check to make all end rooms into end rooms?
-
     int max_distance = -1;
     Room* current_boss_room = nullptr;
     
@@ -304,6 +260,7 @@ void GenerateDungeon() {
     
     current_boss_room->type = BOSS;
 
+    return created_rooms;
 }
 
 int main()
@@ -373,7 +330,7 @@ int main()
     camera_view.offset = {(float) screen_width /2 , (float)screen_height / 2};
     camera_view.zoom = 1.0f;
     
-    GenerateDungeon();
+    vector<Room*> created_rooms = GenerateDungeon();
     
     while (!WindowShouldClose())
     {
@@ -383,7 +340,7 @@ int main()
         player.Update(delta_time);
         
         if (IsKeyPressed(KEY_R)) {
-            GenerateDungeon();
+            created_rooms = GenerateDungeon();
         }
 
         BeginDrawing();
@@ -391,34 +348,42 @@ int main()
         ClearBackground(BLACK);
         
         // DrawTexture(tilemap, 0,0, WHITE);
-        for (int i = 0; i < SCREEN_TILE_HEIGHT; i++) {
-            for (int j = 0; j < SCREEN_TILE_WIDTH; j++) {
-                int tile_type = 12;
-                if (i == 0 && j == 0) {
-                    tile_type = 0;
-                } else if (i == 0 && j == SCREEN_TILE_WIDTH-1) {
-                    tile_type = 2;
-                } else if (i == SCREEN_TILE_HEIGHT-1 && j == 0) {
-                    tile_type = 5;
-                } else if (i == SCREEN_TILE_HEIGHT-1 && j == SCREEN_TILE_WIDTH-1) {
-                    tile_type = 6;
-                } else if (j == 0) {
-                    tile_type = 3;
-                } else if (i == 0 || i == SCREEN_TILE_HEIGHT-1) {
-                    tile_type = 1;
-                } else if (j == SCREEN_TILE_WIDTH-1) {
-                    tile_type = 4;
+        for (Room* r: created_rooms) {
+            for (int i = 0; i < SCREEN_TILE_HEIGHT; i++) {
+                for (int j = 0; j < SCREEN_TILE_WIDTH; j++) {
+                    int tile_type = 12;
+                    if (i == 0 && j == 0) {
+                        tile_type = 0;
+                    } else if (i == 0 && j == SCREEN_TILE_WIDTH-1) {
+                        tile_type = 2;
+                    } else if (i == SCREEN_TILE_HEIGHT-1 && j == 0) {
+                        tile_type = 5;
+                    } else if (i == SCREEN_TILE_HEIGHT-1 && j == SCREEN_TILE_WIDTH-1) {
+                        tile_type = 6;
+                    } else if (j == 0) {
+                        tile_type = 3;
+                    } else if (i == 0 || i == SCREEN_TILE_HEIGHT-1) {
+                        tile_type = 1;
+                    } else if (j == SCREEN_TILE_WIDTH-1) {
+                        tile_type = 4;
+                    }
+                    DrawTexturePro(
+                        tilemap,
+                        tile_types[tile_type].source,
+                        {
+                            ((float)j*tile_size*tile_scale) + (screen_width * r->position.x),
+                            ((float)i*tile_size*tile_scale) + (screen_height * r->position.y),
+                            tile_size*tile_scale,
+                            tile_size*tile_scale},
+                        {0,0},
+                        0,
+                        WHITE
+                    );
                 }
-                DrawTexturePro(
-                    tilemap,
-                    tile_types[tile_type].source,
-                    {(float)j*tile_size*tile_scale,(float)i*tile_size*tile_scale,tile_size*tile_scale, tile_size*tile_scale},
-                    {0,0},
-                    0,
-                    WHITE
-                );
             }
         }
+        
+        
         
         player.Draw();
         EndMode2D();
