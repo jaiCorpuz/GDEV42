@@ -352,6 +352,7 @@ int main()
             for (int i = 0; i < SCREEN_TILE_HEIGHT; i++) {
                 for (int j = 0; j < SCREEN_TILE_WIDTH; j++) {
                     int tile_type = 12;
+                    // draw edges
                     if (i == 0 && j == 0) {
                         tile_type = 0;
                     } else if (i == 0 && j == SCREEN_TILE_WIDTH-1) {
@@ -366,6 +367,56 @@ int main()
                         tile_type = 1;
                     } else if (j == SCREEN_TILE_WIDTH-1) {
                         tile_type = 4;
+                    }
+                    // draw conenctions
+                    int hallway_width = 2;
+                    int left_corner = (SCREEN_TILE_WIDTH/2)-hallway_width;
+                    int right_corner = (SCREEN_TILE_WIDTH/2)+hallway_width-1;
+                    int up_corner = (SCREEN_TILE_HEIGHT/2)-hallway_width;
+                    int down_corner = (SCREEN_TILE_HEIGHT/2)+hallway_width-1;
+                    if (r->neighbors.at(0) != nullptr && r->neighbors.at(0)->type != EMPTY) {
+                        if (i==0) {
+                            if (j==left_corner) {
+                                tile_type = 10;
+                            } else if (j==right_corner) {
+                                tile_type = 9; 
+                            } else if (j > left_corner && j < right_corner) {
+                                tile_type = 12;
+                            }
+                        }
+                    }
+                    if (r->neighbors.at(3) != nullptr && r->neighbors.at(3)->type != EMPTY) {
+                        if (i==SCREEN_TILE_HEIGHT-1) {
+                            if (j==left_corner) {
+                                tile_type = 8;
+                            } else if (j==right_corner) {
+                                tile_type = 7; 
+                            } else if (j > left_corner && j < right_corner) {
+                                tile_type = 12;
+                            }
+                        }
+                    }
+                    if (r->neighbors.at(1) != nullptr && r->neighbors.at(1)->type != EMPTY) {
+                        if (j==0) {
+                            if (i==up_corner) {
+                                tile_type = 10;
+                            } else if (i==down_corner) {
+                                tile_type = 8; 
+                            } else if (i > up_corner && i < down_corner) {
+                                tile_type = 12;
+                            }
+                        }
+                    }
+                    if (r->neighbors.at(2) != nullptr && r->neighbors.at(2)->type != EMPTY) {
+                        if (j==SCREEN_TILE_WIDTH-1) {
+                            if (i==up_corner) {
+                                tile_type = 9;
+                            } else if (i==down_corner) {
+                                tile_type = 7; 
+                            } else if (i > up_corner && i < down_corner) {
+                                tile_type = 12;
+                            }
+                        }
                     }
                     DrawTexturePro(
                         tilemap,
