@@ -110,7 +110,20 @@ int main()
         player.Update(delta_time);
         
         if (IsKeyPressed(KEY_R)) {
+            for (Room* r: created_rooms) {
+                delete r;
+            }
+            created_rooms.clear();
+
             created_rooms = GenerateDungeon();
+
+            for (Room* r : created_rooms) {
+                if (r->type == START) {
+                    player.position.x = (r->position.x * screen_width) + (screen_width/2.0f);
+                    player.position.y = (r->position.y * screen_height) + (screen_height/2.0f);
+                    break;
+                }
+            }
         }
 
         BeginDrawing();
