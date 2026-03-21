@@ -6,11 +6,15 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <bits/stdc++.h>
+//#include <bits/stdc++.h>
+#include <vector>
+#include <algorithm>
+#include <string>
+
 
 #include "Player.cpp"
-// #include "Room.cpp"
-// #include "Tile.cpp"
+#include "Room.cpp"
+#include "Tile.cpp"
 
 using namespace std;
 
@@ -78,7 +82,7 @@ int main()
     
     // GenerateDungeon();
 
-    Player player({0,0}, 25, 200.0f);
+    Player player({(float)screen_width/2.0f,(float)screen_height/2.0f}, 25, 200.0f);
 
     int cam_type = 0;
     Camera2D camera_view ={0};
@@ -91,8 +95,18 @@ int main()
     while (!WindowShouldClose())
     {
         float delta_time = GetFrameTime();
+
+        int roomX = floor(player.position.x/screen_width);
+        int roomY = floor(player.position.y/screen_height);
+
+        Vector2 desiredTarget = {
+            (roomX * screen_width) + (screen_width / 2.0f),
+            (roomY * screen_height) + (screen_height / 2.0f)
+        };
         
-        camera_view.target = player.position;
+        camera_view.target = Vector2Lerp(camera_view.target, desiredTarget, 0.009f);
+
+        // camera_view.target = player.position;
         player.Update(delta_time);
         
         if (IsKeyPressed(KEY_R)) {
@@ -176,7 +190,7 @@ int main()
                     }
 
                     if (tile_types[tile_type].isCollidable) {
-                        r->collidable_tiles.push_back((Vector2){j,i});
+                        r->collidable_tiles.push_back((Vector2){static_cast<float>(j),static_cast<float>(i)});
                     }
 
                     DrawTexturePro(
