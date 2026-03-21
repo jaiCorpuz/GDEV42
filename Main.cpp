@@ -13,7 +13,7 @@
 
 
 #include "Player.cpp"
-#include "Room.cpp"
+// #include "Room.cpp"
 #include "Tile.cpp"
 
 using namespace std;
@@ -22,6 +22,79 @@ const int SCREEN_TILE_WIDTH = 12;
 const int SCREEN_TILE_HEIGHT = 10;
 // const int SCREEN_WIDTH = 768;
 // const int SCREEN_HEIGHT = 640;
+
+void RoomCollisions(vector<Room*>& rooms, const vector<Tile>& tile_types) {
+    for (Room* r : rooms) {
+        r->collidable_tiles.clear();
+        for (int i = 0; i < SCREEN_TILE_HEIGHT; i ++) {
+            for (int j = 0; j < SCREEN_TILE_WIDTH; j ++) {
+                int tile_type = 12;
+
+                if (i==0 && j==0) tile_type = 0;
+                else if (i == 0 && j == SCREEN_TILE_WIDTH-1) tile_type = 2;
+                else if (i == SCREEN_TILE_HEIGHT-1 && j == 0) tile_type = 5;
+                else if (i == SCREEN_TILE_HEIGHT-1 && j == SCREEN_TILE_WIDTH-1) tile_type = 6;
+                else if (j == 0) tile_type = 3;
+                else if (i == 0 || i == SCREEN_TILE_HEIGHT-1) tile_type = 1;
+                else if (j == SCREEN_TILE_WIDTH-1) tile_type = 4;
+
+                int hallway_width = 2;
+                int left_corner = (SCREEN_TILE_WIDTH/2)-hallway_width;
+                int right_corner = (SCREEN_TILE_WIDTH/2)+hallway_width-1;
+                int up_corner = (SCREEN_TILE_HEIGHT/2)-hallway_width;
+                int down_corner = (SCREEN_TILE_HEIGHT/2)+hallway_width-1;
+                if (r->neighbors.at(0) != nullptr && r->neighbors.at(0)->type != EMPTY) {
+                    if (i==0) {
+                        if (j==left_corner) {
+                            tile_type = 10;
+                        } else if (j==right_corner) {
+                            tile_type = 9; 
+                        } else if (j > left_corner && j < right_corner) {
+                            tile_type = 12;
+                        }
+                    }
+                }
+                if (r->neighbors.at(3) != nullptr && r->neighbors.at(3)->type != EMPTY) {
+                    if (i==SCREEN_TILE_HEIGHT-1) {
+                        if (j==left_corner) {
+                            tile_type = 8;
+                        } else if (j==right_corner) {
+                            tile_type = 7; 
+                        } else if (j > left_corner && j < right_corner) {
+                            tile_type = 12;
+                        }
+                    }
+                }
+                if (r->neighbors.at(1) != nullptr && r->neighbors.at(1)->type != EMPTY) {
+                    if (j==0) {
+                        if (i==up_corner) {
+                            tile_type = 10;
+                        } else if (i==down_corner) {
+                            tile_type = 8; 
+                        } else if (i > up_corner && i < down_corner) {
+                            tile_type = 12;
+                        }
+                    }
+                }
+                if (r->neighbors.at(2) != nullptr && r->neighbors.at(2)->type != EMPTY) {
+                    if (j==SCREEN_TILE_WIDTH-1) {
+                        if (i==up_corner) {
+                            tile_type = 9;
+                        } else if (i==down_corner) {
+                            tile_type = 7; 
+                        } else if (i > up_corner && i < down_corner) {
+                            tile_type = 12;
+                        }
+                    }
+                }
+
+                if (tile_types[tile_type].isCollidable) {
+                    r->collidable_tiles.push_back({(float)j, (float)i});
+                }
+            }
+        }
+    }
+}
 
 int main()
 {
@@ -91,6 +164,7 @@ int main()
     camera_view.zoom = 1.0f;
     
     vector<Room*> created_rooms = GenerateDungeon();
+    RoomCollisions(created_rooms, tile_types);
     
     while (!WindowShouldClose())
     {
@@ -107,7 +181,7 @@ int main()
         camera_view.target = Vector2Lerp(camera_view.target, desiredTarget, 0.009f);
 
         // camera_view.target = player.position;
-        player.Update(delta_time);
+        player.Update(delta_time, created_rooms);
         
         if (IsKeyPressed(KEY_R)) {
             for (Room* r: created_rooms) {
@@ -116,6 +190,7 @@ int main()
             created_rooms.clear();
 
             created_rooms = GenerateDungeon();
+            RoomCollisions(created_rooms, tile_types);
 
             for (Room* r : created_rooms) {
                 if (r->type == START) {
@@ -202,9 +277,9 @@ int main()
                         }
                     }
 
-                    if (tile_types[tile_type].isCollidable) {
-                        r->collidable_tiles.push_back((Vector2){static_cast<float>(j),static_cast<float>(i)});
-                    }
+                    // if (tile_types[tile_type].isCollidable) {
+                    //     r->collidable_tiles.push_back((Vector2){static_cast<float>(j),static_cast<float>(i)});
+                    // }
 
                     DrawTexturePro(
                         tilemap,
