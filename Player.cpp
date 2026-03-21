@@ -17,10 +17,36 @@
 #include <raymath.h>
 #include <iostream>
 #include "Player.hpp"
+#include "Room.cpp"
 
 
-void Player::Update(float delta_time) {
-    current_state->Update(delta_time);
+bool CheckTileCollision (
+    Vector2 testPosition,
+    float radius,
+    const std::vector<Room*>& rooms,
+    float tileScale, 
+    int tileSize
+) {
+    float scaledTile = (float)tileSize * tileScale;
+    float roomX = 12 * scaledTile;
+    float roomY = 10 * scaledTile;
+
+    for (Room* r : rooms) {
+        float rX = r->position.x * roomX;
+        float rY = r->position.y * roomY;
+
+        for (Vector2 tile : r->collidable_tiles) {
+            Rectangle wall = {rX + (tile.x * scaledTile), rY + (tile.y * scaledTile), scaledTile, scaledTile};
+            if (CheckCollisionCircleRec(testPosition, radius, wall)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+void Player::Update(float delta_time, const std::vector<Room*>& rooms) {
+    current_state->Update(delta_time, rooms);
 
     if (isInvincible) {
         invincibleTimer -= delta_time;
@@ -49,6 +75,9 @@ Player::Player(Vector2 pos, float rad, float spd) {
     dodgeDuration  = 0.3f;
     invincibleTimer = 0.0f;
     invincibleDuration = 1.0f;
+
+    tileScale = 4.0f;
+    tileSize = 16;
 
     idle.player = &*this;
     moving.player = &*this;
@@ -107,7 +136,7 @@ void PlayerDodging::Exit() {}
 
 void PlayerBlocking::Exit() {}
 
-void PlayerIdle::Update(float delta_time) {
+void PlayerIdle::Update(float delta_time, const std::vector<Room*>& rooms) {
     if (IsKeyDown(KEY_W) || IsKeyDown(KEY_A) || IsKeyDown(KEY_S) || IsKeyDown(KEY_D)) {
         player->SetState(&player->moving);
     } 
@@ -121,7 +150,7 @@ void PlayerIdle::Update(float delta_time) {
     }
 }
 
-void PlayerMoving::Update(float delta_time) {
+void PlayerMoving::Update(float delta_time, const std::vector<Room*>& rooms) {
     player->velocity = Vector2Zero();
     //Movement Logic
     //Move up
@@ -146,13 +175,25 @@ void PlayerMoving::Update(float delta_time) {
         player->SetState(&player->idle);
     }
 
-    
     //Move le player
     player->velocity = Vector2Normalize(player->velocity);
-    player->position = Vector2Add(
+    Vector2 nextPosition = Vector2Add(
         player->position,
         Vector2Scale(player->velocity, player->speed * delta_time)
     );
+
+    float dist = player->speed * delta_time;
+
+    Vector2 nextX = { player->position.x + player->velocity.x * dist, player->position.y };
+    if (!CheckTileCollision(nextX, player->radius, rooms, player->tileScale, player->tileSize)) {
+        player->position.x = nextX.x;
+    }
+
+    // Check Y movement
+    Vector2 nextY = { player->position.x, player->position.y + player->velocity.y * dist };
+    if (!CheckTileCollision(nextY, player->radius, rooms, player->tileScale, player->tileSize)) {
+        player->position.y = nextY.y;
+    }
 
     //If Space while moving, set state to dodge 
     if(IsKeyPressed(KEY_SPACE)){
@@ -166,7 +207,7 @@ void PlayerMoving::Update(float delta_time) {
 
 }
 
-void PlayerAttacking::Update(float delta_time) {
+void PlayerAttacking::Update(float delta_time, const std::vector<Room*>& rooms) {
     //count down from the active time of your Attack
     player->attackTimer -= delta_time;
 
@@ -177,7 +218,7 @@ void PlayerAttacking::Update(float delta_time) {
   // HARD CODED
 }
 
-void PlayerBlocking::Update(float delta_time) {
+void PlayerBlocking::Update(float delta_time, const std::vector<Room*>& rooms) {
     player->velocity = Vector2Zero();
     
     //If right mouse button released, set state to idle
@@ -187,14 +228,19 @@ void PlayerBlocking::Update(float delta_time) {
 
 }
 
-void PlayerDodging::Update(float delta_time) {
+void PlayerDodging::Update(float delta_time, const std::vector<Room*>& rooms) {
     player->dodgeTimer -= delta_time;
 
     //When dodging, move player in direction faster
-    player->position = Vector2Add(
-        player->position,
-        Vector2Scale(player->dodgeDirection, player->speed * 2 * delta_time)
-    );
+    Vector2 dashedPosition = Vector2Scale(player->dodgeDirection, player->speed * 2 * delta_time);
+
+    Vector2 nextPosition = Vector2Add(player->position, dashedPosition);
+
+    if (!CheckTileCollision(nextPosition, player->radius, rooms, player->tileScale, player->tileSize)) {
+        player->position = nextPosition;
+    } else {
+        player->dodgeTimer = 0; 
+    }
 
     //If dodge timer finished, set state to idle
     if (player->dodgeTimer <= 0.0f) {
