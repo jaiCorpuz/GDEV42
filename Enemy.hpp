@@ -3,6 +3,7 @@
 
 #include <raylib.h>
 #include <raymath.h>
+#include <vector>
 #include "Player.hpp"
 
 class Enemy;
@@ -13,7 +14,7 @@ public:
 
     virtual ~EnemyState() {}
     virtual void Enter() = 0;
-    virtual void Update(float delta_time) = 0;
+    virtual void Update(float delta_time, const std::vector<Room*>& rooms) = 0;
     virtual void Exit() = 0;
 };
 
@@ -21,28 +22,28 @@ public:
 class EnemyWandering : public EnemyState {
 public:
     void Enter();
-    void Update(float delta_time);
+    void Update(float delta_time, const std::vector<Room*>& rooms);
     void Exit();
 };
 
 class EnemyChasing : public EnemyState {
 public:
     void Enter();
-    void Update(float delta_time);
+    void Update(float delta_time, const std::vector<Room*>& rooms);
     void Exit();
 };
 
 class EnemyReadyingAttack : public EnemyState {
 public:
     void Enter();
-    void Update(float delta_time);
+    void Update(float delta_time, const std::vector<Room*>& rooms);
     void Exit();
 };
 
 class EnemyAttacking : public EnemyState {
 public:
     void Enter();
-    void Update(float delta_time);
+    void Update(float delta_time, const std::vector<Room*>& rooms);
     void Exit();
 };
 
@@ -79,11 +80,8 @@ public:
     float detectionRadius; //second middle
     float attackRadius; //innermost
 
-    vector<vector<int>> grid;
-    vector<TileType> tileTypes;
-    float tileScale;
-    int gridRows;
-    int gridColumns;
+    float tileScale = 4.0f;
+    int tileSize = 16;
 
     EnemyWandering wandering = EnemyWandering();
     EnemyChasing chasing = EnemyChasing();
@@ -94,7 +92,7 @@ public:
 
     Enemy(Vector2 pos, float size, float speed);
 
-    void Update(float delta_time);
+    void Update(float delta_time, const std::vector<Room*>& rooms);
 
     void Draw();
 
