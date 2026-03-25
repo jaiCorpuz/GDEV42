@@ -26,6 +26,7 @@ struct Room {
     Vector2 position;
     RoomType type;
     int distance_from_start;
+    bool is_locked = false;
     std::vector<Vector2> collidable_tiles;
     std::vector<Room*> neighbors = {nullptr, nullptr, nullptr, nullptr};
     
@@ -236,6 +237,41 @@ std::vector<Room*> GenerateDungeon() {
     }
     
     current_boss_room->type = BOSS;
-
+    std::cout << TextFormat("boss room set: %.0f %.0f", current_boss_room->position.x, current_boss_room->position.y) << std::endl;
+    
+    int current_distance_from_start = current_boss_room->distance_from_start;
+    // std::cout << TextFormat("curr: %d", current_distance_from_start) << std::endl;
+    int door_distance = 1 + rand() % (current_boss_room->distance_from_start);
+    // std::cout << TextFormat("door: %d", door_distance) << std::endl;
+    Room* current_door_room = current_boss_room;
+    // std::cout << TextFormat("current door room: %.0f %.0f, dist: %d", current_door_room->position.x, current_door_room->position.y, current_door_room->distance_from_start) << std::endl;
+    std::vector<Room*> door_visited_rooms;
+    door_visited_rooms.push_back(current_door_room);
+    
+    std::cout << TextFormat("curr %d, goal %d", current_distance_from_start, door_distance) << std::endl;
+    bool door_searching = true;
+    while (door_searching) {
+        if (current_distance_from_start == door_distance) {
+            std::cout << TextFormat("final door room: %.0f %.0f, dist: %d", current_door_room->position.x, current_door_room->position.y, current_door_room->distance_from_start) << std::endl;
+            std::cout << "door search done" << std::endl;
+            door_searching = false;
+            break;
+        }
+        std::cout << TextFormat("current door room: %.0f %.0f, dist: %d", current_door_room->position.x, current_door_room->position.y, current_door_room->distance_from_start) << std::endl;
+        std::cout << TextFormat("neighbors %d", current_door_room->CountOccupiedNeighbors()) << std::endl;
+        for (Room* n : current_door_room->neighbors) {
+            if (n != nullptr && n->type != EMPTY) {
+                std::cout << TextFormat("current neighbor: %.0f %.0f, dist: %d", n->position.x, n->position.y, n->distance_from_start) << std::endl;
+                if (n->distance_from_start < current_distance_from_start && n->distance_from_start != 0) {
+                    current_distance_from_start = n->distance_from_start;
+                    current_door_room = n;
+                    door_visited_rooms.push_back(current_door_room);
+                    break;
+                }
+            }
+        }
+    }
+    current_door_room->is_locked = true;
+    
     return created_rooms;
 }

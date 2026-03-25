@@ -152,8 +152,6 @@ int main()
     InitWindow(screen_width, screen_height, "AlvarezCorpuzGregorio_Homework04");
     
     Texture2D tilemap = LoadTexture(tilemap_filename.c_str());
-    
-    // GenerateDungeon();
 
     Player player({(float)screen_width/2.0f,(float)screen_height/2.0f}, 25, 200.0f);
 
@@ -207,8 +205,10 @@ int main()
         
         // DrawTexture(tilemap, 0,0, WHITE);
         for (Room* r: created_rooms) {
+            // std::cout << TextFormat("drawing room %.0f %.0f", r->position.x, r->position.y) << std::endl;
             for (int i = 0; i < SCREEN_TILE_HEIGHT; i++) {
                 for (int j = 0; j < SCREEN_TILE_WIDTH; j++) {
+                    // std::cout << "t";
                     int tile_type = 12;
                     // draw edges
                     if (i == 0 && j == 0) {
@@ -239,7 +239,11 @@ int main()
                             } else if (j==right_corner) {
                                 tile_type = 9; 
                             } else if (j > left_corner && j < right_corner) {
-                                tile_type = 12;
+                                if (r->neighbors.at(0) != nullptr && r->neighbors.at(0)->is_locked) {
+                                    tile_type = 16;
+                                } else {
+                                    tile_type = 12;
+                                }
                             }
                         }
                     }
@@ -250,7 +254,11 @@ int main()
                             } else if (j==right_corner) {
                                 tile_type = 7; 
                             } else if (j > left_corner && j < right_corner) {
-                                tile_type = 12;
+                                if (r->neighbors.at(3) != nullptr && r->neighbors.at(3)->is_locked) {
+                                    tile_type = 16;
+                                } else {
+                                    tile_type = 12;
+                                }
                             }
                         }
                     }
@@ -261,7 +269,11 @@ int main()
                             } else if (i==down_corner) {
                                 tile_type = 8; 
                             } else if (i > up_corner && i < down_corner) {
-                                tile_type = 12;
+                                if (r->neighbors.at(1) != nullptr && r->neighbors.at(1)->is_locked) {
+                                    tile_type = 16;
+                                } else {
+                                    tile_type = 12;
+                                }
                             }
                         }
                     }
@@ -272,7 +284,11 @@ int main()
                             } else if (i==down_corner) {
                                 tile_type = 7; 
                             } else if (i > up_corner && i < down_corner) {
-                                tile_type = 12;
+                                if (r->neighbors.at(2) != nullptr && r->neighbors.at(2)->is_locked) {
+                                    tile_type = 16;
+                                } else {
+                                    tile_type = 12;
+                                }
                             }
                         }
                     }
@@ -295,12 +311,71 @@ int main()
                     );
                 }
             }
+            // std::cout << std::endl;
         }
-        
-        
-        
+
         player.Draw();
+
         EndMode2D();
+        
+        if (IsKeyDown(KEY_M)) {
+            DrawRectangle(0,0,screen_width,screen_height, ColorAlpha(BLACK, 0.5f));
+            Vector2 center = {(float)screen_width/2, (float)screen_height/2};
+            float minimap_scale = 0.1;
+            Vector2 room_dimensions = {(float)screen_width*minimap_scale, (float)screen_height*minimap_scale};
+            for (Room* r: created_rooms) {
+                DrawRectangleLines(
+                    (center.x)-(room_dimensions.x/2)+(room_dimensions.x*r->position.x),
+                    (center.y)-(room_dimensions.y/2)+(room_dimensions.y*r->position.y),
+                    room_dimensions.x,
+                    room_dimensions.y,
+                    ColorAlpha(BLACK, 0.5f)
+                );
+                DrawRectangleLines(
+                    (center.x)-(room_dimensions.x/2)+(room_dimensions.x*r->position.x),
+                    (center.y)-(room_dimensions.y/2)+(room_dimensions.y*r->position.y),
+                    room_dimensions.x,
+                    room_dimensions.y,
+                    WHITE
+                );
+                if (r->type == BOSS) {
+                    DrawRectangle(
+                        (center.x)-(room_dimensions.x/2)+(room_dimensions.x*r->position.x)+5,
+                        (center.y)-(room_dimensions.y/2)+(room_dimensions.y*r->position.y)+5,
+                        room_dimensions.x-10,
+                        room_dimensions.y-10,
+                        RED
+                    );
+                } 
+                if (r->type == START) {
+                    DrawRectangle(
+                        (center.x)-(room_dimensions.x/2)+(room_dimensions.x*r->position.x)+5,
+                        (center.y)-(room_dimensions.y/2)+(room_dimensions.y*r->position.y)+5,
+                        room_dimensions.x-10,
+                        room_dimensions.y-10,
+                        GREEN
+                    );
+                } 
+                if (r->is_locked) {
+                    DrawRectangle(
+                        (center.x)-(room_dimensions.x/2)+(room_dimensions.x*r->position.x)+5,
+                        (center.y)-(room_dimensions.y/2)+(room_dimensions.y*r->position.y)+5,
+                        room_dimensions.x-10,
+                        room_dimensions.y-10,
+                        BLUE
+                    );
+                } 
+            }
+            
+            DrawCircle(
+                center.x + std::floor(player.position.x/screen_width)*room_dimensions.x,
+                center.y + std::floor(player.position.y/screen_height)*room_dimensions.y,
+                10,
+                WHITE
+            );
+        }
+
+
         EndDrawing();
     }
 
