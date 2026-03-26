@@ -1,20 +1,19 @@
 #include <raylib.h>
 #include <raymath.h>
 #include <iostream>
+#include <vector>
 #include "Enemy.hpp"
 #include "Player.hpp"
 
 bool CheckTileCollision(
-    Vector2 testPosition,
-    float radius,
-    const std::vector<std::vector<int>>& grid,
-    const std::vector<TileType>& tileTypes,
-    float tileScale,
-    int gridRows,
-    int gridColumns
+    Vector2 testPosition, 
+    float radius, 
+    const std::vector<Room*>& rooms, 
+    float tileScale, 
+    int tileSize
 );
 
-void Enemy::Update(float delta_time) {
+void Enemy::Update(float delta_time, const std::vector<Room*>& rooms) {
     if (damageCooldownTimer > 0) {
         damageCooldownTimer -= delta_time;
     } else {
@@ -24,7 +23,7 @@ void Enemy::Update(float delta_time) {
     if (attackDuration > 0.0f)
     attackDuration -= delta_time;
 
-    current_state->Update(delta_time);
+    current_state->Update(delta_time, rooms);
 
     // If Player collides with the enemy, they get damaged
     if (CheckCollisionCircleRec(
@@ -175,25 +174,17 @@ void EnemyAttacking::Exit(){}
 
 
 
-void EnemyWandering::Update(float delta_time){
+void EnemyWandering::Update(float delta_time, const std::vector<Room*>& rooms){
     // Move le enemie
     Vector2 newPosition = Vector2Add(
         enemy->position,
         Vector2Scale(enemy->velocity, enemy->speed * delta_time)
     );
 
-    if (!CheckTileCollision(newPosition, enemy->size, enemy->grid, enemy->tileTypes, enemy->tileScale, enemy->gridRows, enemy->gridColumns)) {
-        enemy->position = newPosition;
-    }
+    if (!CheckTileCollision(newPosition, enemy->size, rooms, enemy->tileScale, enemy->tileSize)) {
+            enemy->position = newPosition;
+        }
 
-    // Enemy doesnt go beyond the window space
-    if (enemy->position.x < 0 || enemy->position.x > 1280){
-        enemy->velocity.x *= -1;
-    } 
-    if (enemy->position.y < 0 || enemy->position.y > 720){
-        enemy->velocity.y *= -1;
-    } 
-    
     // Enemy moves in random directions limitedly, 2% chance (lemme know if it should be higher...?)
     if (GetRandomValue(0, 100) < 2) {
         float angle = GetRandomValue(0, 359) * (PI / 180.0f);
@@ -215,7 +206,7 @@ void EnemyWandering::Update(float delta_time){
     
 }
 
-void EnemyChasing::Update(float delta_time){
+void EnemyChasing::Update(float delta_time, const std::vector<Room*>& rooms){
     if (enemy->playerRef == nullptr) return;
     
     Vector2 playerDirection = Vector2Subtract(enemy->playerRef->position, enemy->position);
@@ -237,12 +228,12 @@ void EnemyChasing::Update(float delta_time){
     enemy->rotation = atan2f(playerDirection.y, playerDirection.x);
     Vector2 newPosition = Vector2Add(enemy->position, Vector2Scale(playerDirection, enemy->speed * delta_time));
 
-    if (!CheckTileCollision(newPosition, enemy->size, enemy->grid, enemy->tileTypes, enemy->tileScale, enemy->gridRows, enemy->gridColumns)) {
+    if (!CheckTileCollision(newPosition, enemy->size, rooms, enemy->tileScale, enemy->tileSize)) {
         enemy->position = newPosition;
     }
 }
 
-void EnemyReadyingAttack::Update(float delta_time){
+void EnemyReadyingAttack::Update(float delta_time, const std::vector<Room*>& rooms){
     enemy->readyTimer -= delta_time;
 
     Vector2 dirToPlayer = Vector2Subtract(enemy->playerRef->position, enemy->position);
@@ -257,12 +248,12 @@ void EnemyReadyingAttack::Update(float delta_time){
     }
 }
 
-void EnemyAttacking::Update(float delta_time){
+void EnemyAttacking::Update(float delta_time, const std::vector<Room*>& rooms){
     enemy->dashTimer -= delta_time;
     Vector2 newPosition = Vector2Add(enemy->position, Vector2Scale(enemy->dashDirection, enemy->speed * 4.5 * delta_time));
-    if (!CheckTileCollision(newPosition, enemy->size, enemy->grid, enemy->tileTypes, enemy->tileScale, enemy->gridRows, enemy->gridColumns)) {
-        enemy->position = newPosition;
-    }
+    if (!CheckTileCollision(newPosition, enemy->size, rooms, enemy->tileScale, enemy->tileSize)) {
+            enemy->position = newPosition;
+        }
     if (enemy->dashTimer <= 0.0f)
         {
             enemy->attackTimer = enemy->attackDuration;

@@ -1,28 +1,9 @@
-/*
-|------------------------------------------------------|
-|                    PLAYER HEADER                     |              
-|------------------------------------------------------|
-|   This is the header file (.hpp) file that contains  |
-|   declarations for the Player class along with the   | 
-|   PlayerState class and its subclasses.              |
-|                                                      |
-|   Note that ONLY DECLARATIONS are made here. The     |
-|   DEFINITION of all member variables and functions   |
-|   are done in the PlayerStateMachine.cpp file        |
-|                                                      |
-|   When adding new classes to this file               |
-|   (i.e. PlayerBlocking, PlayerAttacking, etc.),      |
-|   Only have the class declarations and define them   |
-|   later in the PlayerStateMachine.cpp file           |
-|                                                      |
-|------------------------------------------------------|
-*/
-
 #ifndef PLAYER
 #define PLAYER
 
 #include <raylib.h>
 #include <raymath.h>
+#include <vector>
 
 struct Room;
 

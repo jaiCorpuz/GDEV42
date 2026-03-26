@@ -1,17 +1,3 @@
-/*
-|------------------------------------------------------|
-|                 PLAYER STATE MACHINE                 |              
-|------------------------------------------------------|
-|   This is the file that contains definitions for     |
-|   all the functions declared in the Player.hpp       |
-|   file.                                              |
-|                                                      |
-|   All functions from the Player.hpp SHOULD be        |
-|   defined here (For Now)                             |
-|                                                      |
-|------------------------------------------------------|
-*/
-
 #pragma once
 #include <raylib.h>
 #include <raymath.h>
