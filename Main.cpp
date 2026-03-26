@@ -123,24 +123,18 @@ int main()
             int roomX = floor(player.position.x/screen_width);
             int roomY = floor(player.position.y/screen_height);
 
-<<<<<<< HEAD
         Vector2 desiredTarget = {
             (roomX * screen_width) + (screen_width / 2.0f),
             (roomY * screen_height) + (screen_height / 2.0f)
         };
         
-        camera_view.target = Vector2Lerp(camera_view.target, desiredTarget, 0.05f);
-=======
-            Vector2 desiredTarget = {
-                (roomX * screen_width) + (screen_width / 2.0f),
-                (roomY * screen_height) + (screen_height / 2.0f)
-            };
-            
-            camera_view.target = Vector2Lerp(camera_view.target, desiredTarget, 0.009f);
->>>>>>> b5f663a07b676fe33d290a3dab7415b6fe30ad8a
+        camera_view.target = Vector2Lerp(camera_view.target, desiredTarget, 1.0f);
 
             // camera_view.target = player.position;
-            player.Update(delta_time, created_rooms);
+            if (Vector2Equals(camera_view.target, desiredTarget)) {
+                player.Update(delta_time, created_rooms);
+            }
+            
             if (bossEnemy.alive) {
 
                 int bossRoomX = floor(bossEnemy.position.x / screen_width);
@@ -178,55 +172,9 @@ int main()
                     break;
                 }
             }
-<<<<<<< HEAD
 
             player.key_collected = false;
-        }
 
-        BeginDrawing();
-        BeginMode2D(camera_view);
-        ClearBackground((Color) {0xda, 0x7a, 0x34, 0xff});
-        
-        // DrawTexture(tilemap, 0,0, WHITE);
-        for (Room* r: created_rooms) {
-            // std::cout << TextFormat("drawing room %.0f %.0f", r->position.x, r->position.y) << std::endl;
-            for (int i = 0; i < SCREEN_TILE_HEIGHT; i++) {
-                for (int j = 0; j < SCREEN_TILE_WIDTH; j++) {
-                    // std::cout << "t";
-                    int tile_type = 12;
-                    // draw edges
-                    if (i == 0 && j == 0) {
-                        tile_type = 0;
-                    } else if (i == 0 && j == SCREEN_TILE_WIDTH-1) {
-                        tile_type = 2;
-                    } else if (i == SCREEN_TILE_HEIGHT-1 && j == 0) {
-                        tile_type = 5;
-                    } else if (i == SCREEN_TILE_HEIGHT-1 && j == SCREEN_TILE_WIDTH-1) {
-                        tile_type = 6;
-                    } else if (j == 0) {
-                        tile_type = 3;
-                    } else if (i == 0 || i == SCREEN_TILE_HEIGHT-1) {
-                        tile_type = 1;
-                    } else if (j == SCREEN_TILE_WIDTH-1) {
-                        tile_type = 4;
-                    }
-                    // draw conenctions
-                    int hallway_width = 2;
-                    int left_corner = (SCREEN_TILE_WIDTH/2)-hallway_width;
-                    int right_corner = (SCREEN_TILE_WIDTH/2)+hallway_width-1;
-                    int up_corner = (SCREEN_TILE_HEIGHT/2)-hallway_width;
-                    int down_corner = (SCREEN_TILE_HEIGHT/2)+hallway_width-1;
-                    if (r->neighbors.at(0) != nullptr && r->neighbors.at(0)->type != EMPTY) {
-                        if (i==0) {
-                            if (j==left_corner) {
-                                tile_type = 10;
-                            } else if (j==right_corner) {
-                                tile_type = 9; 
-                            } else if (j > left_corner && j < right_corner) {
-                                if (r->neighbors.at(0) != nullptr && r->neighbors.at(0)->is_locked) {
-                                    tile_type = 16;
-                                } else {
-=======
             for (Room* r : created_rooms) {
                 if (r->type == BOSS) {
                     bossEnemy.position.x = (r->position.x * screen_width) + (screen_width / 2.0f);
@@ -240,19 +188,18 @@ int main()
 
             player.hp = 5.0f;
             currentScreen = PLAYING;
-
         }
 
         BeginDrawing();
-        ClearBackground(BLACK);
-        
-        //if playing, generate the map
+        ClearBackground((Color) {0xda, 0x7a, 0x34, 0xff});
         if(currentScreen == PLAYING){
             BeginMode2D(camera_view);
-            // DrawTexture(tilemap, 0,0, WHITE);
+        
             for (Room* r: created_rooms) {
+                // std::cout << TextFormat("drawing room %.0f %.0f", r->position.x, r->position.y) << std::endl;
                 for (int i = 0; i < SCREEN_TILE_HEIGHT; i++) {
                     for (int j = 0; j < SCREEN_TILE_WIDTH; j++) {
+                        // std::cout << "t";
                         int tile_type = 12;
                         // draw edges
                         if (i == 0 && j == 0) {
@@ -283,24 +230,14 @@ int main()
                                 } else if (j==right_corner) {
                                     tile_type = 9; 
                                 } else if (j > left_corner && j < right_corner) {
->>>>>>> b5f663a07b676fe33d290a3dab7415b6fe30ad8a
+                                    if (r->neighbors.at(0) != nullptr && r->neighbors.at(0)->is_locked) {
+                                        tile_type = 16;
+                                    } else {
                                     tile_type = 12;
+                                    }
                                 }
                             }
                         }
-<<<<<<< HEAD
-                    }
-                    if (r->neighbors.at(3) != nullptr && r->neighbors.at(3)->type != EMPTY) {
-                        if (i==SCREEN_TILE_HEIGHT-1) {
-                            if (j==left_corner) {
-                                tile_type = 8;
-                            } else if (j==right_corner) {
-                                tile_type = 7; 
-                            } else if (j > left_corner && j < right_corner) {
-                                if (r->neighbors.at(3) != nullptr && r->neighbors.at(3)->is_locked) {
-                                    tile_type = 16;
-                                } else {
-=======
                         if (r->neighbors.at(3) != nullptr && r->neighbors.at(3)->type != EMPTY) {
                             if (i==SCREEN_TILE_HEIGHT-1) {
                                 if (j==left_corner) {
@@ -308,24 +245,14 @@ int main()
                                 } else if (j==right_corner) {
                                     tile_type = 7; 
                                 } else if (j > left_corner && j < right_corner) {
->>>>>>> b5f663a07b676fe33d290a3dab7415b6fe30ad8a
-                                    tile_type = 12;
+                                    if (r->neighbors.at(3) != nullptr && r->neighbors.at(3)->is_locked) {
+                                        tile_type = 16;
+                                    } else {
+                                        tile_type = 12;
+                                    }
                                 }
                             }
                         }
-<<<<<<< HEAD
-                    }
-                    if (r->neighbors.at(1) != nullptr && r->neighbors.at(1)->type != EMPTY) {
-                        if (j==0) {
-                            if (i==up_corner) {
-                                tile_type = 10;
-                            } else if (i==down_corner) {
-                                tile_type = 8; 
-                            } else if (i > up_corner && i < down_corner) {
-                                if (r->neighbors.at(1) != nullptr && r->neighbors.at(1)->is_locked) {
-                                    tile_type = 16;
-                                } else {
-=======
                         if (r->neighbors.at(1) != nullptr && r->neighbors.at(1)->type != EMPTY) {
                             if (j==0) {
                                 if (i==up_corner) {
@@ -333,24 +260,14 @@ int main()
                                 } else if (i==down_corner) {
                                     tile_type = 8; 
                                 } else if (i > up_corner && i < down_corner) {
->>>>>>> b5f663a07b676fe33d290a3dab7415b6fe30ad8a
-                                    tile_type = 12;
+                                    if (r->neighbors.at(1) != nullptr && r->neighbors.at(1)->is_locked) {
+                                        tile_type = 16;
+                                    } else {
+                                        tile_type = 12;
+                                    }
                                 }
                             }
                         }
-<<<<<<< HEAD
-                    }
-                    if (r->neighbors.at(2) != nullptr && r->neighbors.at(2)->type != EMPTY) {
-                        if (j==SCREEN_TILE_WIDTH-1) {
-                            if (i==up_corner) {
-                                tile_type = 9;
-                            } else if (i==down_corner) {
-                                tile_type = 7; 
-                            } else if (i > up_corner && i < down_corner) {
-                                if (r->neighbors.at(2) != nullptr && r->neighbors.at(2)->is_locked) {
-                                    tile_type = 16;
-                                } else {
-=======
                         if (r->neighbors.at(2) != nullptr && r->neighbors.at(2)->type != EMPTY) {
                             if (j==SCREEN_TILE_WIDTH-1) {
                                 if (i==up_corner) {
@@ -358,36 +275,32 @@ int main()
                                 } else if (i==down_corner) {
                                     tile_type = 7; 
                                 } else if (i > up_corner && i < down_corner) {
->>>>>>> b5f663a07b676fe33d290a3dab7415b6fe30ad8a
-                                    tile_type = 12;
+                                    if (r->neighbors.at(2) != nullptr && r->neighbors.at(2)->is_locked) {
+                                        tile_type = 16;
+                                    } else {
+                                        tile_type = 12;
+                                    }
                                 }
                             }
                         }
-
-<<<<<<< HEAD
-                    // draw key tile
-                    if (r->type == KEY && !r->key_collected) {
-                        if (i==SCREEN_TILE_HEIGHT/2 && j==SCREEN_TILE_WIDTH/2) {
-                            tile_type = 17;
+                        // draw key tile
+                        if (r->type == KEY && !r->key_collected) {
+                            if (i==SCREEN_TILE_HEIGHT/2 && j==SCREEN_TILE_WIDTH/2) {
+                                tile_type = 17;
+                            }
                         }
-                    }
 
-                    // this actually allows the same tile to be in collidable_tiles multiple times
-                    // at least it stops after a while
-                    if (tile_types[tile_type].isCollidable && r->collidable_tiles.size() < SCREEN_TILE_HEIGHT*SCREEN_TILE_WIDTH) {
-                        r->collidable_tiles.push_back((Vector2){(float)(j),(float)(i)});
-                    }
-                    if (tile_types[tile_type].isCollectable && r->collectable_tiles.size() < 1) {
-                        r->collectable_tiles.push_back((Vector2){(float)(j),(float)(i)});
-                    }
-                    if (tile_types[tile_type].isUnlockable && r->unlockable_tiles.size() < 8) {
-                        r->unlockable_tiles.push_back((Vector2){(float)(j),(float)(i)});
-                    }
-=======
-                        // if (tile_types[tile_type].isCollidable) {
-                        //     r->collidable_tiles.push_back((Vector2){static_cast<float>(j),static_cast<float>(i)});
-                        // }
->>>>>>> b5f663a07b676fe33d290a3dab7415b6fe30ad8a
+                        // this actually allows the same tile to be in collidable_tiles multiple times
+                        // at least it stops after a while
+                        if (tile_types[tile_type].isCollidable && r->collidable_tiles.size() < SCREEN_TILE_HEIGHT*SCREEN_TILE_WIDTH) {
+                            r->collidable_tiles.push_back((Vector2){(float)(j),(float)(i)});
+                        }
+                        if (tile_types[tile_type].isCollectable && r->collectable_tiles.size() < 1) {
+                            r->collectable_tiles.push_back((Vector2){(float)(j),(float)(i)});
+                        }
+                        if (tile_types[tile_type].isUnlockable && r->unlockable_tiles.size() < 8) {
+                            r->unlockable_tiles.push_back((Vector2){(float)(j),(float)(i)});
+                        }
 
                         DrawTexturePro(
                             tilemap,
@@ -404,111 +317,105 @@ int main()
                     }
                 }
             }
-<<<<<<< HEAD
             // std::cout << std::endl;
-        }
-
-        player.Draw();
-        if (player.key_collected) {
-            DrawTexturePro(
+            
+            player.Draw();
+            if (player.key_collected) {
+                DrawTexturePro(
                 tilemap,
                 {0, (float)8*tile_size, (float)tile_size, (float)tile_size},
                 {player.position.x-player.radius, player.position.y-player.radius, tile_size*tile_scale, tile_size*tile_scale},
                 {0,0},
                 0, WHITE);
-        }
-
-        EndMode2D();
+            }
 
         // DrawText(TextFormat("camera %.2f %.2f", camera_view.target.x, camera_view.target.y), 10, 10, 50, WHITE);
         // DrawText(TextFormat("target %.2f %.2f", desiredTarget.x, desiredTarget.y), 10, 60, 50, WHITE);
         // std::cout << Vector2Equals(camera_view.target, desiredTarget) << std::endl;
         
-        if (IsKeyDown(KEY_M)) {
-            DrawRectangle(0,0,screen_width,screen_height, ColorAlpha(BLACK, 0.5f));
-            Vector2 center = {(float)screen_width/2, (float)screen_height/2};
-            float minimap_scale = 0.1;
-            Vector2 room_dimensions = {(float)screen_width*minimap_scale, (float)screen_height*minimap_scale};
-            for (Room* r: created_rooms) {
-                DrawRectangle(
-                    (center.x)-(room_dimensions.x/2)+(room_dimensions.x*r->position.x),
-                    (center.y)-(room_dimensions.y/2)+(room_dimensions.y*r->position.y),
-                    room_dimensions.x,
-                    room_dimensions.y,
-                    ColorAlpha(BLACK, 0.5f)
-                );
-                DrawRectangleLines(
-                    (center.x)-(room_dimensions.x/2)+(room_dimensions.x*r->position.x),
-                    (center.y)-(room_dimensions.y/2)+(room_dimensions.y*r->position.y),
-                    room_dimensions.x,
-                    room_dimensions.y,
-                    WHITE
-                );
-                if (r->type == BOSS) {
+            
+
+            // DrawText(TextFormat("fps %.2f", 1/delta_time), 10, 10, 50, WHITE);
+            DrawText(TextFormat("HP: %d", (int)player.hp), (int)player.position.x - 25, (int)player.position.y - 40, 20, GREEN);
+            
+            bossEnemy.Draw();
+            EndMode2D();
+            if (IsKeyDown(KEY_M)) {
+                DrawRectangle(0,0,screen_width,screen_height, ColorAlpha(BLACK, 0.5f));
+                Vector2 center = {(float)screen_width/2, (float)screen_height/2};
+                float minimap_scale = 0.1;
+                Vector2 room_dimensions = {(float)screen_width*minimap_scale, (float)screen_height*minimap_scale};
+                for (Room* r: created_rooms) {
                     DrawRectangle(
-                        (center.x)-(room_dimensions.x/2)+(room_dimensions.x*r->position.x)+5,
-                        (center.y)-(room_dimensions.y/2)+(room_dimensions.y*r->position.y)+5,
-                        room_dimensions.x-10,
-                        room_dimensions.y-10,
-                        RED
+                        (center.x)-(room_dimensions.x/2)+(room_dimensions.x*r->position.x),
+                        (center.y)-(room_dimensions.y/2)+(room_dimensions.y*r->position.y),
+                        room_dimensions.x,
+                        room_dimensions.y,
+                        ColorAlpha(BLACK, 0.5f)
                     );
-                } 
-                if (r->type == START) {
-                    DrawRectangle(
-                        (center.x)-(room_dimensions.x/2)+(room_dimensions.x*r->position.x)+5,
-                        (center.y)-(room_dimensions.y/2)+(room_dimensions.y*r->position.y)+5,
-                        room_dimensions.x-10,
-                        room_dimensions.y-10,
-                        GREEN
+                    DrawRectangleLines(
+                        (center.x)-(room_dimensions.x/2)+(room_dimensions.x*r->position.x),
+                        (center.y)-(room_dimensions.y/2)+(room_dimensions.y*r->position.y),
+                        room_dimensions.x,
+                        room_dimensions.y,
+                        WHITE
                     );
-                } 
-                if (r->type == KEY && !r->key_collected) {
-                    DrawCircle(
-                        (center.x)+(room_dimensions.x*r->position.x),
-                        (center.y)+(room_dimensions.y*r->position.y),
-                        20,
-                        BLUE
-                    );
-                } 
-                if (r->is_locked) {
-                    for (int i = 0; i < 3; i++) {
-                        DrawRectangleLines(
-                            (i*2)+(center.x)-(room_dimensions.x/2)+(room_dimensions.x*r->position.x)+5,
-                            (i*2)+(center.y)-(room_dimensions.y/2)+(room_dimensions.y*r->position.y)+5,
-                            room_dimensions.x-10-(i*4),
-                            room_dimensions.y-10-(i*4),
+                    if (r->type == BOSS) {
+                        DrawRectangle(
+                            (center.x)-(room_dimensions.x/2)+(room_dimensions.x*r->position.x)+5,
+                            (center.y)-(room_dimensions.y/2)+(room_dimensions.y*r->position.y)+5,
+                            room_dimensions.x-10,
+                            room_dimensions.y-10,
+                            RED
+                        );
+                    } 
+                    if (r->type == START) {
+                        DrawRectangle(
+                            (center.x)-(room_dimensions.x/2)+(room_dimensions.x*r->position.x)+5,
+                            (center.y)-(room_dimensions.y/2)+(room_dimensions.y*r->position.y)+5,
+                            room_dimensions.x-10,
+                            room_dimensions.y-10,
+                            GREEN
+                        );
+                    } 
+                    if (r->type == KEY && !r->key_collected) {
+                        DrawCircle(
+                            (center.x)+(room_dimensions.x*r->position.x),
+                            (center.y)+(room_dimensions.y*r->position.y),
+                            20,
                             BLUE
                         );
-                    }
-                } 
+                    } 
+                    if (r->is_locked) {
+                        for (int i = 0; i < 3; i++) {
+                            DrawRectangleLines(
+                                (i*2)+(center.x)-(room_dimensions.x/2)+(room_dimensions.x*r->position.x)+5,
+                                (i*2)+(center.y)-(room_dimensions.y/2)+(room_dimensions.y*r->position.y)+5,
+                                room_dimensions.x-10-(i*4),
+                                room_dimensions.y-10-(i*4),
+                                BLUE
+                            );
+                        }
+                    } 
+                }
+                
+                DrawCircle(
+                    center.x + std::floor(player.position.x/screen_width)*room_dimensions.x,
+                    center.y + std::floor(player.position.y/screen_height)*room_dimensions.y,
+                    10,
+                    WHITE
+                );
             }
-            
-            DrawCircle(
-                center.x + std::floor(player.position.x/screen_width)*room_dimensions.x,
-                center.y + std::floor(player.position.y/screen_height)*room_dimensions.y,
-                10,
-                WHITE
-            );
-        }
-
-        // DrawText(TextFormat("fps %.2f", 1/delta_time), 10, 10, 50, WHITE);
-=======
-            DrawText(TextFormat("HP: %d", (int)player.hp), (int)player.position.x - 25, (int)player.position.y - 40, 20, GREEN);
-            player.Draw();
-            bossEnemy.Draw();
-            EndMode2D(); 
-        }else if (currentScreen == GAMEOVER) {
+        } else if (currentScreen == GAMEOVER) {
             DrawText("GAMEOVER :(", screen_width/2 - MeasureText("GAMEOVER :(", 60)/2, screen_height/2 - 40, 60, RED);
             DrawText("Press 'R' to Restart", screen_width/2 - MeasureText("Press 'R' to Restart", 30)/2, screen_height/2 + 40, 30, WHITE);
            
-        } 
-        else if (currentScreen == WIN) {
+        } else if (currentScreen == WIN) {
             DrawText("YOU WIN!", screen_width/2 - MeasureText("YOU WIN!", 60)/2, screen_height/2 - 40, 60, GOLD);
             DrawText("Press 'R' to Restart", screen_width/2 - MeasureText("Press 'R' to Restart", 30)/2, screen_height/2 + 40, 30, WHITE);
            
         }
     
->>>>>>> b5f663a07b676fe33d290a3dab7415b6fe30ad8a
         EndDrawing();
     }
 
