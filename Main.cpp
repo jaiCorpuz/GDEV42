@@ -128,12 +128,12 @@ int main()
             (roomY * screen_height) + (screen_height / 2.0f)
         };
         
-        camera_view.target = Vector2Lerp(camera_view.target, desiredTarget, 1.0f);
+        camera_view.target = Vector2Lerp(camera_view.target, desiredTarget, 0.05f);
 
             // camera_view.target = player.position;
-            if (Vector2Equals(camera_view.target, desiredTarget)) {
+            // if (Vector2Equals(camera_view.target, desiredTarget)) {
                 player.Update(delta_time, created_rooms);
-            }
+            // }
             
             if (bossEnemy.alive) {
 
