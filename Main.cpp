@@ -58,17 +58,17 @@ int main()
             stream >> count;
             for (int i = 0; i < count; i++) {
                 float x, y;
-                int collidable;
+                int collidable, collectable, unlockable;
                 getline(settings, line);
                 istringstream tile_stream(line);
-                tile_stream >> x >> y >> collidable;
+                tile_stream >> x >> y >> collidable >> collectable >> unlockable;
                 Rectangle tile_source = {
                     x*tile_size,
                     y*tile_size,
                     (float) tile_size,
                     (float) tile_size,
                 };
-                tile_types.push_back(Tile(tile_source, (bool) collidable));
+                tile_types.push_back(Tile(tile_source, (bool) collidable, (bool) collectable, (bool) unlockable));
             }
         }
     }
@@ -124,11 +124,13 @@ int main()
                     break;
                 }
             }
+
+            player.key_collected = false;
         }
 
         BeginDrawing();
         BeginMode2D(camera_view);
-        ClearBackground(BLACK);
+        ClearBackground((Color) {0xda, 0x7a, 0x34, 0xff});
         
         // DrawTexture(tilemap, 0,0, WHITE);
         for (Room* r: created_rooms) {
@@ -220,11 +222,23 @@ int main()
                         }
                     }
 
+                    // draw key tile
+                    if (r->type == KEY && !r->key_collected) {
+                        if (i==SCREEN_TILE_HEIGHT/2 && j==SCREEN_TILE_WIDTH/2) {
+                            tile_type = 17;
+                        }
+                    }
+
                     // this actually allows the same tile to be in collidable_tiles multiple times
                     // at least it stops after a while
                     if (tile_types[tile_type].isCollidable && r->collidable_tiles.size() < SCREEN_TILE_HEIGHT*SCREEN_TILE_WIDTH) {
                         r->collidable_tiles.push_back((Vector2){(float)(j),(float)(i)});
-                        std::cout << "ADD TILE TO COLLIDE" << std::endl;
+                    }
+                    if (tile_types[tile_type].isCollectable && r->collectable_tiles.size() < 1) {
+                        r->collectable_tiles.push_back((Vector2){(float)(j),(float)(i)});
+                    }
+                    if (tile_types[tile_type].isUnlockable && r->unlockable_tiles.size() < 8) {
+                        r->unlockable_tiles.push_back((Vector2){(float)(j),(float)(i)});
                     }
 
                     DrawTexturePro(
@@ -245,6 +259,14 @@ int main()
         }
 
         player.Draw();
+        if (player.key_collected) {
+            DrawTexturePro(
+                tilemap,
+                {0, (float)8*tile_size, (float)tile_size, (float)tile_size},
+                {player.position.x-player.radius, player.position.y-player.radius, tile_size*tile_scale, tile_size*tile_scale},
+                {0,0},
+                0, WHITE);
+        }
 
         EndMode2D();
 
@@ -290,7 +312,7 @@ int main()
                         GREEN
                     );
                 } 
-                if (r->type == KEY) {
+                if (r->type == KEY && !r->key_collected) {
                     DrawCircle(
                         (center.x)+(room_dimensions.x*r->position.x),
                         (center.y)+(room_dimensions.y*r->position.y),
@@ -319,7 +341,7 @@ int main()
             );
         }
 
-        DrawText(TextFormat("fps %.2f", 1/delta_time), 10, 10, 50, WHITE);
+        // DrawText(TextFormat("fps %.2f", 1/delta_time), 10, 10, 50, WHITE);
         EndDrawing();
     }
 

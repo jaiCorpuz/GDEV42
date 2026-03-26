@@ -27,7 +27,10 @@ struct Room {
     RoomType type;
     int distance_from_start;
     bool is_locked = false;
+    bool key_collected = false;
     std::vector<Vector2> collidable_tiles;
+    std::vector<Vector2> collectable_tiles;
+    std::vector<Vector2> unlockable_tiles;
     std::vector<Room*> neighbors = {nullptr, nullptr, nullptr, nullptr};
     
     Room(std::vector<Room*>* rooms, Vector2 position, RoomType type) {

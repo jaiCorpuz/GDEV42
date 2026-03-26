@@ -88,6 +88,7 @@ public:
     Color color;
     float hp = 5.0f;
     Camera2D* camera;
+    bool key_collected = false;
 
     Vector2 velocity;
     Vector2 acceleration;
