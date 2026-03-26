@@ -126,6 +126,7 @@ std::vector<Room*> GenerateDungeon() {
     std::vector<Room*> created_rooms;
     std::queue<Room*> q;
     created_rooms.push_back(start_room);
+    created_rooms.at(0)->type = START;
     q.push(start_room);
     
     int room_count = 1;
@@ -237,18 +238,29 @@ std::vector<Room*> GenerateDungeon() {
     }
     
     current_boss_room->type = BOSS;
-    std::cout << TextFormat("boss room set: %.0f %.0f", current_boss_room->position.x, current_boss_room->position.y) << std::endl;
+    // std::cout << TextFormat("boss room set: %.0f %.0f", current_boss_room->position.x, current_boss_room->position.y) << std::endl;
     
     int current_distance_from_start = current_boss_room->distance_from_start;
     // std::cout << TextFormat("curr: %d", current_distance_from_start) << std::endl;
-    int door_distance = 1 + rand() % (current_boss_room->distance_from_start);
-    // std::cout << TextFormat("door: %d", door_distance) << std::endl;
+    int door_rand = rand();
+    int door_min;
+    int door_max;
+    int door_distance;
+    if (created_rooms.at(0)->CountOccupiedNeighbors() == 1) {
+        door_min = 2;
+        door_max = current_boss_room->distance_from_start-1;
+    } else {
+        door_min = 1;
+        door_max = current_boss_room->distance_from_start;
+    }
+    door_distance = door_min + door_rand % door_max;
+    std::cout << TextFormat("door: %d < %d < %d ", door_min, door_distance, door_max) << std::endl;
     Room* current_door_room = current_boss_room;
     // std::cout << TextFormat("current door room: %.0f %.0f, dist: %d", current_door_room->position.x, current_door_room->position.y, current_door_room->distance_from_start) << std::endl;
     std::vector<Room*> door_visited_rooms;
     door_visited_rooms.push_back(current_door_room);
     
-    std::cout << TextFormat("curr %d, goal %d", current_distance_from_start, door_distance) << std::endl;
+    // std::cout << TextFormat("curr %d, goal %d", current_distance_from_start, door_distance) << std::endl;
     bool door_searching = true;
     while (door_searching) {
         if (current_distance_from_start == door_distance) {
@@ -257,11 +269,11 @@ std::vector<Room*> GenerateDungeon() {
             door_searching = false;
             break;
         }
-        std::cout << TextFormat("current door room: %.0f %.0f, dist: %d", current_door_room->position.x, current_door_room->position.y, current_door_room->distance_from_start) << std::endl;
-        std::cout << TextFormat("neighbors %d", current_door_room->CountOccupiedNeighbors()) << std::endl;
+        // std::cout << TextFormat("current door room: %.0f %.0f, dist: %d", current_door_room->position.x, current_door_room->position.y, current_door_room->distance_from_start) << std::endl;
+        // std::cout << TextFormat("neighbors %d", current_door_room->CountOccupiedNeighbors()) << std::endl;
         for (Room* n : current_door_room->neighbors) {
             if (n != nullptr && n->type != EMPTY) {
-                std::cout << TextFormat("current neighbor: %.0f %.0f, dist: %d", n->position.x, n->position.y, n->distance_from_start) << std::endl;
+                // std::cout << TextFormat("current neighbor: %.0f %.0f, dist: %d", n->position.x, n->position.y, n->distance_from_start) << std::endl;
                 if (n->distance_from_start < current_distance_from_start && n->distance_from_start != 0) {
                     current_distance_from_start = n->distance_from_start;
                     current_door_room = n;
@@ -272,6 +284,71 @@ std::vector<Room*> GenerateDungeon() {
         }
     }
     current_door_room->is_locked = true;
+    
+    bool key_room_search = true;
+    Room* current_key_room = created_rooms.at(0);
+    std::vector<Room*> ks_visited;
+    std::queue<Room*> ks_not_visited;
+    ks_visited.push_back(current_door_room);
+    ks_not_visited.push(current_key_room);
+    
+    std::cout << "=== key search START" << std::endl;
+    while(!ks_not_visited.empty()) {
+        current_key_room = ks_not_visited.front();
+        ks_not_visited.pop();
+        ks_visited.push_back(current_key_room);
+        std::cout << TextFormat("visited room: %.0f %.0f", current_key_room->position.x, current_key_room->position.y) << std::endl;
+        for (Room* n : current_key_room->neighbors) {
+            if (n == nullptr || n->type == EMPTY || n->is_locked) {
+                // std::cout << TextFormat("skipped room: %.0f %.0f", n->position.x, n->position.y) << std::endl;
+                continue;
+            } else {
+                bool visited = false;
+                for (Room* r: ks_visited) {
+                    if (
+                        n->position.x == r->position.x &&
+                        n->position.y == r->position.y
+                    ) {
+                        visited = true;
+                        break;
+                    }
+                }
+                if (!visited && n->distance_from_start != 0) {
+                    std::cout << TextFormat("not visited room: %.0f %.0f", n->position.x, n->position.y) << std::endl;
+                    ks_visited.push_back(n);
+                    ks_not_visited.push(n);
+                }
+            }
+        }
+    }
+    std::cout << "=== key search CANDIDATES" << std::endl;
+    std::vector<Room*> key_room_candidates;
+    for (Room* r: ks_visited) {
+        std::cout << TextFormat("- checking room: %.0f %.0f", r->position.x, r->position.y) << std::endl;
+        bool added = false;
+        for (Room* k: key_room_candidates) {
+            if (
+                k->position.x == r->position.x &&
+                k->position.y == r->position.y
+            ) {
+                std::cout << "already a candidate" << std::endl;
+                added = true;
+            }
+        }
+        if (
+            !added &&
+            (r->type != DOOR && r->type != START && r->type != EMPTY) &&
+            !r->is_locked
+        ) {
+            std::cout << TextFormat("- candidate room: %.0f %.0f", r->position.x, r->position.y) << std::endl;
+            key_room_candidates.push_back(r);
+        }
+    }
+    
+    int key_room_index = rand() % key_room_candidates.size();
+    std::cout << "=== key search DONE" << std::endl;
+    key_room_candidates.at(key_room_index)->type = KEY;
+    std::cout << TextFormat("key room: %.0f %.0f", key_room_candidates.at(key_room_index)->position.x, key_room_candidates.at(key_room_index)->position.y) << std::endl;
     
     return created_rooms;
 }

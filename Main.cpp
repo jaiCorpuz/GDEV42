@@ -324,7 +324,7 @@ int main()
             float minimap_scale = 0.1;
             Vector2 room_dimensions = {(float)screen_width*minimap_scale, (float)screen_height*minimap_scale};
             for (Room* r: created_rooms) {
-                DrawRectangleLines(
+                DrawRectangle(
                     (center.x)-(room_dimensions.x/2)+(room_dimensions.x*r->position.x),
                     (center.y)-(room_dimensions.y/2)+(room_dimensions.y*r->position.y),
                     room_dimensions.x,
@@ -356,14 +356,24 @@ int main()
                         GREEN
                     );
                 } 
-                if (r->is_locked) {
-                    DrawRectangle(
-                        (center.x)-(room_dimensions.x/2)+(room_dimensions.x*r->position.x)+5,
-                        (center.y)-(room_dimensions.y/2)+(room_dimensions.y*r->position.y)+5,
-                        room_dimensions.x-10,
-                        room_dimensions.y-10,
+                if (r->type == KEY) {
+                    DrawCircle(
+                        (center.x)+(room_dimensions.x*r->position.x),
+                        (center.y)+(room_dimensions.y*r->position.y),
+                        20,
                         BLUE
                     );
+                } 
+                if (r->is_locked) {
+                    for (int i = 0; i < 3; i++) {
+                        DrawRectangleLines(
+                            (i*2)+(center.x)-(room_dimensions.x/2)+(room_dimensions.x*r->position.x)+5,
+                            (i*2)+(center.y)-(room_dimensions.y/2)+(room_dimensions.y*r->position.y)+5,
+                            room_dimensions.x-10-(i*4),
+                            room_dimensions.y-10-(i*4),
+                            BLUE
+                        );
+                    }
                 } 
             }
             
