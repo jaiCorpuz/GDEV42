@@ -311,6 +311,7 @@ int main()
                                 }
                             }
 
+                            // add interactions to tiles
                             // this actually allows the same tile to be in collidable_tiles multiple times
                             // at least it stops after a while
                             if (tile_types[tile_type].isCollidable && r->collidable_tiles.size() < SCREEN_TILE_HEIGHT*SCREEN_TILE_WIDTH) {
@@ -323,6 +324,7 @@ int main()
                                 r->unlockable_tiles.push_back((Vector2){(float)(j),(float)(i)});
                             }
 
+                            // draw tile
                             DrawTexturePro(
                                 tilemap,
                                 tile_types[tile_type].source,
@@ -358,6 +360,7 @@ int main()
 
             // DrawText(TextFormat("fps %.2f", 1/delta_time), 10, 10, 50, WHITE);
 
+            // minimap
             if (IsKeyDown(KEY_M)) {
                 DrawRectangle(0,0,screen_width,screen_height, ColorAlpha(BLACK, 0.5f));
                 Vector2 center = {(float)screen_width/2, (float)screen_height/2};
