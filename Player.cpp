@@ -4,6 +4,7 @@
 #include <iostream>
 #include "Player.hpp"
 #include "Room.cpp"
+#include "Tile.cpp"
 
 
 bool CheckTileCollision (
@@ -30,28 +31,44 @@ bool CheckTileCollision (
     }
     return false;
 }
+bool CheckTileCollisionRoom (
+    Vector2 testPosition,
+    float radius,
+    Room* room
+) {
+    float scaledTile = Tile::size * Tile::scale;
+    float roomX = 12 * scaledTile;
+    float roomY = 10 * scaledTile;
+
+    float rX = room->position.x * roomX;
+    float rY = room->position.y * roomY;
+
+    for (Vector2 tile : room->collidable_tiles) {
+        Rectangle wall = {rX + (tile.x * scaledTile), rY + (tile.y * scaledTile), scaledTile, scaledTile};
+        if (CheckCollisionCircleRec(testPosition, radius, wall)) {
+            return true;
+        }
+    }
+    return false;
+}
 
 bool CheckTileCollect (
     Vector2 testPosition,
     float radius,
-    const std::vector<Room*>& rooms,
-    float tileScale, 
-    int tileSize
+    Room* room
 ) {
-    float scaledTile = (float)tileSize * tileScale;
+    float scaledTile = Tile::size * Tile::scale;
     float roomX = 12 * scaledTile;
     float roomY = 10 * scaledTile;
 
-    for (Room* r : rooms) {
-        float rX = r->position.x * roomX;
-        float rY = r->position.y * roomY;
+    float rX = room->position.x * roomX;
+    float rY = room->position.y * roomY;
 
-        for (Vector2 tile : r->collectable_tiles) {
-            Rectangle wall = {rX + (tile.x * scaledTile), rY + (tile.y * scaledTile), scaledTile, scaledTile};
-            if (CheckCollisionCircleRec(testPosition, radius, wall)) {
-                r->key_collected = true;
-                return true;
-            }
+    for (Vector2 tile : room->collectable_tiles) {
+        Rectangle wall = {rX + (tile.x * scaledTile), rY + (tile.y * scaledTile), scaledTile, scaledTile};
+        if (CheckCollisionCircleRec(testPosition, radius, wall)) {
+            room->key_collected = true;
+            return true;
         }
     }
     return false;
@@ -60,42 +77,39 @@ bool CheckTileCollect (
 bool CheckTileUnlock (
     Vector2 testPosition,
     float radius,
-    const std::vector<Room*>& rooms,
-    float tileScale, 
-    int tileSize
+    Room* room
 ) {
-    float scaledTile = (float)tileSize * tileScale;
+    float scaledTile = Tile::size * Tile::scale;
     float roomX = 12 * scaledTile;
     float roomY = 10 * scaledTile;
 
-    for (Room* r : rooms) {
-        float rX = r->position.x * roomX;
-        float rY = r->position.y * roomY;
+    float rX = room->position.x * roomX;
+    float rY = room->position.y * roomY;
 
-        for (Vector2 tile : r->unlockable_tiles) {
-            Rectangle wall = {rX + (tile.x * scaledTile), rY + (tile.y * scaledTile), scaledTile, scaledTile};
-            if (CheckCollisionCircleRec(testPosition, radius, wall)) {
-                for (Room* n: r->neighbors) {
-                    if (n != nullptr && n->is_locked) {
-                        n->is_locked = false;
-                        for (Room* m: n->neighbors) {
-                            if (m != nullptr) {
-                                m->collidable_tiles.clear();
-                            }
+    for (Vector2 tile : room->unlockable_tiles) {
+        Rectangle wall = {rX + (tile.x * scaledTile), rY + (tile.y * scaledTile), scaledTile, scaledTile};
+        if (CheckCollisionCircleRec(testPosition, radius, wall)) {
+            for (Room* n: room->neighbors) {
+                if (n != nullptr && n->is_locked) {
+                    n->is_locked = false;
+                    for (Room* m: n->neighbors) {
+                        if (m != nullptr) {
+                            m->collidable_tiles.clear();
                         }
                     }
                 }
-                r->collidable_tiles.clear();
-                return true;
             }
+            room->collidable_tiles.clear();
+            return true;
         }
     }
+
     return false;
 }
 
-void Player::Update(float delta_time, const std::vector<Room*>& rooms) {
+void Player::Update(float delta_time) {
     
-    current_state->Update(delta_time, rooms);
+    current_state->Update(delta_time);
 
     if (isInvincible) {
         invincibleTimer -= delta_time;
@@ -185,7 +199,7 @@ void PlayerDodging::Exit() {}
 
 void PlayerBlocking::Exit() {}
 
-void PlayerIdle::Update(float delta_time, const std::vector<Room*>& rooms) {
+void PlayerIdle::Update(float delta_time) {
     if (IsKeyDown(KEY_W) || IsKeyDown(KEY_A) || IsKeyDown(KEY_S) || IsKeyDown(KEY_D)) {
         player->SetState(&player->moving);
     } 
@@ -199,7 +213,7 @@ void PlayerIdle::Update(float delta_time, const std::vector<Room*>& rooms) {
     }
 }
 
-void PlayerMoving::Update(float delta_time, const std::vector<Room*>& rooms) {
+void PlayerMoving::Update(float delta_time) {
     player->velocity = Vector2Zero();
     //Movement Logic
     //Move up
@@ -234,21 +248,27 @@ void PlayerMoving::Update(float delta_time, const std::vector<Room*>& rooms) {
     float dist = player->speed * delta_time;
     
     Vector2 nextX = { player->position.x + player->velocity.x * dist, player->position.y + player->velocity.y * dist };
-    if (!CheckTileCollision(nextX, player->radius, rooms, player->tileScale, player->tileSize)) {
+    // if (!CheckTileCollision(nextX, player->radius, rooms, player->tileScale, player->tileSize)) {
+    //     player->position.x = nextX.x;
+    // }
+    if (!CheckTileCollisionRoom(nextX, player->radius, player->current_room)) {
         player->position.x = nextX.x;
     }
     
     // Check Y movement
     Vector2 nextY = { player->position.x, player->position.y + player->velocity.y * dist };
-    if (!CheckTileCollision(nextY, player->radius, rooms, player->tileScale, player->tileSize)) {
+    // if (!CheckTileCollision(nextY, player->radius, rooms, player->tileScale, player->tileSize)) {
+    //     player->position.y = nextY.y;
+    // }
+    if (!CheckTileCollisionRoom(nextY, player->radius, player->current_room)) {
         player->position.y = nextY.y;
     }
     
-    if (CheckTileCollect({nextX.x, nextY.y}, player->radius, rooms, player->tileScale, player->tileSize)) {
+    if (CheckTileCollect({nextX.x, nextY.y}, player->radius, player->current_room)) {
         player->key_collected = true;
     }
     if (player->key_collected) {
-        if (CheckTileUnlock({nextX.x, nextY.y}, player->radius, rooms, player->tileScale, player->tileSize)) {
+        if (CheckTileUnlock({nextX.x, nextY.y}, player->radius, player->current_room)) {
             player->key_collected = false;
         }
     }
@@ -265,7 +285,7 @@ void PlayerMoving::Update(float delta_time, const std::vector<Room*>& rooms) {
 
 }
 
-void PlayerAttacking::Update(float delta_time, const std::vector<Room*>& rooms) {
+void PlayerAttacking::Update(float delta_time) {
     //count down from the active time of your Attack
     player->attackTimer -= delta_time;
 
@@ -276,7 +296,7 @@ void PlayerAttacking::Update(float delta_time, const std::vector<Room*>& rooms) 
   // HARD CODED
 }
 
-void PlayerBlocking::Update(float delta_time, const std::vector<Room*>& rooms) {
+void PlayerBlocking::Update(float delta_time) {
     player->velocity = Vector2Zero();
     
     //If right mouse button released, set state to idle
@@ -286,7 +306,7 @@ void PlayerBlocking::Update(float delta_time, const std::vector<Room*>& rooms) {
 
 }
 
-void PlayerDodging::Update(float delta_time, const std::vector<Room*>& rooms) {
+void PlayerDodging::Update(float delta_time) {
     player->dodgeTimer -= delta_time;
 
     //When dodging, move player in direction faster
@@ -294,10 +314,19 @@ void PlayerDodging::Update(float delta_time, const std::vector<Room*>& rooms) {
 
     Vector2 nextPosition = Vector2Add(player->position, dashedPosition);
 
-    if (!CheckTileCollision(nextPosition, player->radius, rooms, player->tileScale, player->tileSize)) {
+    if (!CheckTileCollisionRoom(nextPosition, player->radius, player->current_room)) {
         player->position = nextPosition;
     } else {
         player->dodgeTimer = 0; 
+    }
+
+    if (CheckTileCollect(nextPosition, player->radius, player->current_room)) {
+        player->key_collected = true;
+    }
+    if (player->key_collected) {
+        if (CheckTileUnlock(nextPosition, player->radius, player->current_room)) {
+            player->key_collected = false;
+        }
     }
 
     //If dodge timer finished, set state to idle

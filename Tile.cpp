@@ -1,6 +1,9 @@
 #include <raylib.h>
 
 struct Tile {
+    static int size;
+    static int scale;
+
     Rectangle source;
     bool isCollidable;
     bool isCollectable;

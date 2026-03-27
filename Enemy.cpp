@@ -5,15 +5,13 @@
 #include "Enemy.hpp"
 #include "Player.hpp"
 
-bool CheckTileCollision(
+bool CheckTileCollisionRoom(
     Vector2 testPosition, 
-    float radius, 
-    const std::vector<Room*>& rooms, 
-    float tileScale, 
-    int tileSize
+    float radius,
+    Room* room
 );
 
-void Enemy::Update(float delta_time, const std::vector<Room*>& rooms) {
+void Enemy::Update(float delta_time) {
     if (damageCooldownTimer > 0) {
         damageCooldownTimer -= delta_time;
     } else {
@@ -23,7 +21,7 @@ void Enemy::Update(float delta_time, const std::vector<Room*>& rooms) {
     if (attackDuration > 0.0f)
     attackDuration -= delta_time;
 
-    current_state->Update(delta_time, rooms);
+    current_state->Update(delta_time);
 
     // If Player collides with the enemy, they get damaged
     if (CheckCollisionCircleRec(
@@ -174,16 +172,16 @@ void EnemyAttacking::Exit(){}
 
 
 
-void EnemyWandering::Update(float delta_time, const std::vector<Room*>& rooms){
+void EnemyWandering::Update(float delta_time){
     // Move le enemie
     Vector2 newPosition = Vector2Add(
         enemy->position,
         Vector2Scale(enemy->velocity, enemy->speed * delta_time)
     );
 
-    if (!CheckTileCollision(newPosition, enemy->size, rooms, enemy->tileScale, enemy->tileSize)) {
-            enemy->position = newPosition;
-        }
+    if (!CheckTileCollisionRoom(newPosition, enemy->size, enemy->current_room)) {
+        enemy->position = newPosition;
+    }
 
     // Enemy moves in random directions limitedly, 2% chance (lemme know if it should be higher...?)
     if (GetRandomValue(0, 100) < 2) {
@@ -206,7 +204,7 @@ void EnemyWandering::Update(float delta_time, const std::vector<Room*>& rooms){
     
 }
 
-void EnemyChasing::Update(float delta_time, const std::vector<Room*>& rooms){
+void EnemyChasing::Update(float delta_time){
     if (enemy->playerRef == nullptr) return;
     
     Vector2 playerDirection = Vector2Subtract(enemy->playerRef->position, enemy->position);
@@ -228,12 +226,12 @@ void EnemyChasing::Update(float delta_time, const std::vector<Room*>& rooms){
     enemy->rotation = atan2f(playerDirection.y, playerDirection.x);
     Vector2 newPosition = Vector2Add(enemy->position, Vector2Scale(playerDirection, enemy->speed * delta_time));
 
-    if (!CheckTileCollision(newPosition, enemy->size, rooms, enemy->tileScale, enemy->tileSize)) {
+    if (!CheckTileCollisionRoom(newPosition, enemy->size, enemy->current_room)) {
         enemy->position = newPosition;
     }
 }
 
-void EnemyReadyingAttack::Update(float delta_time, const std::vector<Room*>& rooms){
+void EnemyReadyingAttack::Update(float delta_time){
     enemy->readyTimer -= delta_time;
 
     Vector2 dirToPlayer = Vector2Subtract(enemy->playerRef->position, enemy->position);
@@ -248,12 +246,12 @@ void EnemyReadyingAttack::Update(float delta_time, const std::vector<Room*>& roo
     }
 }
 
-void EnemyAttacking::Update(float delta_time, const std::vector<Room*>& rooms){
+void EnemyAttacking::Update(float delta_time){
     enemy->dashTimer -= delta_time;
     Vector2 newPosition = Vector2Add(enemy->position, Vector2Scale(enemy->dashDirection, enemy->speed * 4.5 * delta_time));
-    if (!CheckTileCollision(newPosition, enemy->size, rooms, enemy->tileScale, enemy->tileSize)) {
-            enemy->position = newPosition;
-        }
+    if (!CheckTileCollisionRoom(newPosition, enemy->size, enemy->current_room)) {
+        enemy->position = newPosition;
+    }
     if (enemy->dashTimer <= 0.0f)
         {
             enemy->attackTimer = enemy->attackDuration;

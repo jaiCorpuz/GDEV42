@@ -14,7 +14,7 @@ public:
 
     virtual ~EnemyState() {}
     virtual void Enter() = 0;
-    virtual void Update(float delta_time, const std::vector<Room*>& rooms) = 0;
+    virtual void Update(float delta_time) = 0;
     virtual void Exit() = 0;
 };
 
@@ -22,28 +22,28 @@ public:
 class EnemyWandering : public EnemyState {
 public:
     void Enter();
-    void Update(float delta_time, const std::vector<Room*>& rooms);
+    void Update(float delta_time);
     void Exit();
 };
 
 class EnemyChasing : public EnemyState {
 public:
     void Enter();
-    void Update(float delta_time, const std::vector<Room*>& rooms);
+    void Update(float delta_time);
     void Exit();
 };
 
 class EnemyReadyingAttack : public EnemyState {
 public:
     void Enter();
-    void Update(float delta_time, const std::vector<Room*>& rooms);
+    void Update(float delta_time);
     void Exit();
 };
 
 class EnemyAttacking : public EnemyState {
 public:
     void Enter();
-    void Update(float delta_time, const std::vector<Room*>& rooms);
+    void Update(float delta_time);
     void Exit();
 };
 
@@ -56,6 +56,7 @@ public:
     Color color;
     float hp;
     bool alive;
+    Room* current_room;
 
     Vector2 velocity;
     Vector2 acceleration;
@@ -92,7 +93,7 @@ public:
 
     Enemy(Vector2 pos, float size, float speed);
 
-    void Update(float delta_time, const std::vector<Room*>& rooms);
+    void Update(float delta_time);
 
     void Draw();
 
