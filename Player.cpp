@@ -76,8 +76,13 @@ bool CheckTileUnlock (
             Rectangle wall = {rX + (tile.x * scaledTile), rY + (tile.y * scaledTile), scaledTile, scaledTile};
             if (CheckCollisionCircleRec(testPosition, radius, wall)) {
                 for (Room* n: r->neighbors) {
-                    if (n != nullptr) {
+                    if (n != nullptr && n->is_locked) {
                         n->is_locked = false;
+                        for (Room* m: n->neighbors) {
+                            if (m != nullptr) {
+                                m->collidable_tiles.clear();
+                            }
+                        }
                     }
                 }
                 r->collidable_tiles.clear();
