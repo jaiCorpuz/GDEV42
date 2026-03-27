@@ -242,8 +242,10 @@ void PlayerMoving::Update(float delta_time, const std::vector<Room*>& rooms) {
     if (CheckTileCollect({nextX.x, nextY.y}, player->radius, rooms, player->tileScale, player->tileSize)) {
         player->key_collected = true;
     }
-    if (CheckTileUnlock({nextX.x, nextY.y}, player->radius, rooms, player->tileScale, player->tileSize)) {
-        player->key_collected = false;
+    if (player->key_collected) {
+        if (CheckTileUnlock({nextX.x, nextY.y}, player->radius, rooms, player->tileScale, player->tileSize)) {
+            player->key_collected = false;
+        }
     }
 
     //If Space while moving, set state to dodge 

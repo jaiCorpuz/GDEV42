@@ -328,18 +328,20 @@ int main()
                 {0,0},
                 0, WHITE);
             }
-
-        // DrawText(TextFormat("camera %.2f %.2f", camera_view.target.x, camera_view.target.y), 10, 10, 50, WHITE);
-        // DrawText(TextFormat("target %.2f %.2f", desiredTarget.x, desiredTarget.y), 10, 60, 50, WHITE);
-        // std::cout << Vector2Equals(camera_view.target, desiredTarget) << std::endl;
-        
+            bossEnemy.Draw();            
             
-
             // DrawText(TextFormat("fps %.2f", 1/delta_time), 10, 10, 50, WHITE);
             DrawText(TextFormat("HP: %d", (int)player.hp), (int)player.position.x - 25, (int)player.position.y - 40, 20, GREEN);
             
-            bossEnemy.Draw();
+            // if (IsKeyPressed(KEY_M)) {
+            //     camera_view.zoom = 0.1f;
+            // }
+            // if (IsKeyReleased(KEY_M)) {
+            //     camera_view.zoom = 1.0f;
+            // }
+
             EndMode2D();
+
             if (IsKeyDown(KEY_M)) {
                 DrawRectangle(0,0,screen_width,screen_height, ColorAlpha(BLACK, 0.5f));
                 Vector2 center = {(float)screen_width/2, (float)screen_height/2};
