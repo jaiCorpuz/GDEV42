@@ -103,19 +103,47 @@ int main()
     vector<Room*> created_rooms = GenerateDungeon();
     // RoomCollisions(created_rooms, tile_types);
 
-    Enemy bossEnemy({0, 0}, 30.0f, 150.0f);
-    bossEnemy.playerRef = &player;
+    // Enemy bossEnemy({0, 0}, 30.0f, 150.0f);
+    // bossEnemy.playerRef = &player;
     
-    //places the boss in the boss room
+    // //places the boss in the boss room
+    // for (Room* r : created_rooms) {
+    //     if (r->type == BOSS) {
+    //         bossEnemy.current_room = r;
+    //         bossEnemy.position.x = (r->position.x * screen_width) + (screen_width / 2.0f);
+    //         bossEnemy.position.y = (r->position.y * screen_height) + (screen_height / 2.0f);
+    //         bossEnemy.hp = 2.0f;
+    //         bossEnemy.alive = true;
+    //         bossEnemy.SetState(&bossEnemy.wandering);
+    //         break;
+    //     }
+    // }
+
+    // bossEnemy replaced with a vector of enemy pointers
+    vector<Enemy*> dungeon_enemies;
+    
+    // Spawn enemies in each room
     for (Room* r : created_rooms) {
-        if (r->type == BOSS) {
-            bossEnemy.current_room = r;
-            bossEnemy.position.x = (r->position.x * screen_width) + (screen_width / 2.0f);
-            bossEnemy.position.y = (r->position.y * screen_height) + (screen_height / 2.0f);
-            bossEnemy.hp = 2.0f;
-            bossEnemy.alive = true;
-            bossEnemy.SetState(&bossEnemy.wandering);
-            break;
+        if (r->type != START) {
+            int num_enemies = GetRandomValue(0, 3); // 0 to 3 enemies per room
+            
+            for (int i = 0; i < num_enemies; i++) {
+                // Initialize new enemy
+                Enemy* e = new Enemy({0, 0}, 30.0f, 100.0f); // Slightly reduced speed from 150 for regular enemies
+                e->playerRef = &player;
+                e->current_room = r;
+                
+                // Randomize position within the room bounds (padding by 100 to avoid spawning in walls)
+                float ex = (r->position.x * screen_width) + GetRandomValue(100, screen_width - 100);
+                float ey = (r->position.y * screen_height) + GetRandomValue(100, screen_height - 100);
+                
+                e->position = {ex, ey};
+                e->hp = 2.0f;
+                e->alive = true;
+                e->SetState(&e->wandering);
+                
+                dungeon_enemies.push_back(e);
+            }
         }
     }
     
@@ -147,25 +175,44 @@ int main()
                     break;
                 }
             }
-        
-            
-            if (bossEnemy.alive) {
 
-                int bossRoomX = floor(bossEnemy.position.x / screen_width);
-                int bossRoomY = floor(bossEnemy.position.y / screen_height);
+            bool allEnemiesDead = true; // Track this for our new Win Condition
 
-                //if the player enters the boss room, that is when the boss moves
-                if (roomX == bossRoomX && roomY == bossRoomY) {
-                    bossEnemy.Update(delta_time);
+            for (Enemy* e : dungeon_enemies) {
+                if (e->alive) {
+                    allEnemiesDead = false; // At least one enemy is still alive
+                    
+                    int eRoomX = floor(e->position.x / screen_width);
+                    int eRoomY = floor(e->position.y / screen_height);
+                    e->Update(delta_time);
                 }
-            }     
+            } 
             
-            //gameover if the player loses health, win if the player kills boss.
+            // Gameover if the player loses health, win if ALL enemies are dead.
             if (player.hp <= 0) {
                 currentScreen = GAMEOVER;
-            } else if (!bossEnemy.alive) {
+            } else if (allEnemiesDead && !dungeon_enemies.empty()) {
                 currentScreen = WIN;
             }
+            
+            // if (bossEnemy.alive) {
+
+            //     int bossRoomX = floor(bossEnemy.position.x / screen_width);
+            //     int bossRoomY = floor(bossEnemy.position.y / screen_height);
+
+            //     //if the player enters the boss room, that is when the boss moves
+            //     if (roomX == bossRoomX && roomY == bossRoomY) {
+            //         bossEnemy.Update(delta_time);
+            //     }
+            // }     
+            
+            //gameover if the player loses health, win if the player kills boss.
+            // if (player.hp <= 0) {
+            //     currentScreen = GAMEOVER;
+            // }
+            // } else if (!bossEnemy.alive) {
+            //     currentScreen = WIN;
+            // }
 
         }
 
@@ -189,16 +236,33 @@ int main()
 
             player.key_collected = false;
 
+            // Memory cleanup for enemies
+            for (Enemy* e : dungeon_enemies) {
+                delete e;
+            }
+            dungeon_enemies.clear();
+
+            // Re-spawn enemies for the new dungeon
             for (Room* r : created_rooms) {
-                if (r->type == BOSS) {
-                    bossEnemy.position.x = (r->position.x * screen_width) + (screen_width / 2.0f);
-                    bossEnemy.position.y = (r->position.y * screen_height) + (screen_height / 2.0f);
-                    bossEnemy.hp = 2.0f;
-                    bossEnemy.alive = true;
-                    bossEnemy.SetState(&bossEnemy.wandering);
-                    break;
+                if (r->type != START) {
+                    int num_enemies = GetRandomValue(0, 3);
+                    for (int i = 0; i < num_enemies; i++) {
+                        Enemy* e = new Enemy({0, 0}, 30.0f, 100.0f);
+                        e->playerRef = &player;
+                        e->current_room = r;
+                        
+                        float ex = (r->position.x * screen_width) + GetRandomValue(100, screen_width - 100);
+                        float ey = (r->position.y * screen_height) + GetRandomValue(100, screen_height - 100);
+                        
+                        e->position = {ex, ey};
+                        e->hp = 2.0f;
+                        e->alive = true;
+                        e->SetState(&e->wandering);
+                        
+                        dungeon_enemies.push_back(e);
+                    }
                 }
-            } 
+            }
 
             player.hp = 5.0f;
             currentScreen = PLAYING;
@@ -352,7 +416,13 @@ int main()
                 {0,0},
                 0, WHITE);
             }
-            bossEnemy.Draw();            
+            
+            for (Enemy* e : dungeon_enemies) {
+                // Only draw enemies that are alive and in the current room
+                if (e->alive) {
+                    e->Draw();
+                }
+            }          
             
             DrawText(TextFormat("HP: %d", (int)player.hp), (int)player.position.x - 25, (int)player.position.y - 40, 20, GREEN);
             
@@ -441,6 +511,10 @@ int main()
     }
 
     UnloadTexture(tilemap);
+    for (Enemy* e : dungeon_enemies) {
+            delete e;
+    }
+    dungeon_enemies.clear();
 
     CloseWindow();
 
