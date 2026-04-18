@@ -34,7 +34,7 @@ void Enemy::Update(float delta_time) {
             size
         })
     ) {
-        playerRef->TakeDamage(1.0f);
+        HandlePlayerCollision();
     }
 
     
@@ -131,7 +131,7 @@ void Enemy::TakeDamage() {
 }
 
 void EnemyWandering::Enter(){
-    enemy->color = BLUE;
+    enemy->color = enemy->baseColor;
     // Chooses a random initial direction for the enemy to face
     // UGH MATH I HAD TO RECONSULT MY CALKILLUS
     // JIC so basically because cos and sin uses radians i sbeve
@@ -257,4 +257,41 @@ void EnemyAttacking::Update(float delta_time){
             enemy->attackTimer = enemy->attackDuration;
             enemy->SetState(&enemy->wandering);
         }
+}
+
+void Enemy::HandlePlayerCollision() {
+    // ill add damage latur
+}
+
+Shadow::Shadow(Vector2 pos, float size, float speed) : Enemy(pos, size, speed) {
+    //ill set custom stats latur
+    hp = 1.0f;
+    baseColor = DARKGRAY; 
+    color = baseColor; 
+}
+
+void Shadow::HandlePlayerCollision() {
+    //ill set custom stats latur
+}
+
+
+Spirit::Spirit(Vector2 pos, float size, float speed) : Enemy(pos, size, speed) {
+    hp = 2.0f;
+    baseColor = DARKGRAY; 
+    color = baseColor;
+}
+
+void Spirit::HandlePlayerCollision() {
+    //ill set custom stats latur
+}
+
+Poltergeist::Poltergeist(Vector2 pos, float size, float speed) : Enemy(pos, size, speed) {
+    hp = 3.0f;
+    baseColor = PURPLE;
+    color = baseColor;
+}
+
+void Poltergeist::HandlePlayerCollision() {
+    //ill set custom stats latur
+    playerRef->TakeDamage(1.0f);
 }

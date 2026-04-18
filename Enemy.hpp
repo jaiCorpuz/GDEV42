@@ -50,10 +50,16 @@ public:
 //The enemy
 class Enemy {
     EnemyState* current_state = nullptr;
+
 public:
+
+    virtual ~Enemy() = default;
+    virtual void HandlePlayerCollision();
+
     Vector2 position;
     float size;
     Color color;
+    Color baseColor = WHITE;
     float hp;
     bool alive;
     Room* current_room;
@@ -102,6 +108,24 @@ public:
     EnemyState* GetCurrentState();
 
     void TakeDamage();
+};
+
+class Shadow : public Enemy {
+public:
+    Shadow(Vector2 pos, float size, float speed);
+    void HandlePlayerCollision() override;
+};
+
+class Spirit : public Enemy {
+public:
+    Spirit(Vector2 pos, float size, float speed);
+    void HandlePlayerCollision() override;
+};
+
+class Poltergeist : public Enemy {
+public:
+    Poltergeist(Vector2 pos, float size, float speed);
+    void HandlePlayerCollision() override;
 };
 
 
