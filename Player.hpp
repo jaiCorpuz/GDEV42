@@ -75,6 +75,9 @@ public:
     Vector2 velocity;
     Vector2 acceleration;
     float speed;
+    float speedMultiplier = 1.0f;
+    float slowTimer = 0.0f;
+    float obscureTimer = 0.0f;
 
     float attackTimer;
     float attackDuration;

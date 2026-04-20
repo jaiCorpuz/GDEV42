@@ -123,7 +123,7 @@ int main()
     // Spawn enemies in each room
     for (Room* r : created_rooms) {
         if (r->type != START) {
-            int num_enemies = GetRandomValue(0, 3); // 0 to 3 enemies per room
+            int num_enemies = GetRandomValue(1, 3); // 0 to 3 enemies per room
             
             for (int i = 0; i < num_enemies; i++) {
 
@@ -254,7 +254,7 @@ int main()
             // Re-spawn enemies for the new dungeon
             for (Room* r : created_rooms) {
                 if (r->type != START) {
-                    int num_enemies = GetRandomValue(0, 3); // 0 to 3 enemies per room
+                    int num_enemies = GetRandomValue(0, 3); // 1 to 3 enemies per room
                     
                     for (int i = 0; i < num_enemies; i++) {
 
@@ -451,6 +451,12 @@ int main()
             EndMode2D();
 
             // DrawText(TextFormat("fps %.2f", 1/delta_time), 10, 10, 50, WHITE);
+
+            if (player.obscureTimer > 0) {
+                    // Draw a solid black rectangle over the entire window
+                    DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), BLACK); 
+                
+                }
 
             // minimap
             if (IsKeyDown(KEY_M)) {

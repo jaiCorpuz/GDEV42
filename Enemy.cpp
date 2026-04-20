@@ -23,7 +23,7 @@ void Enemy::Update(float delta_time) {
 
     current_state->Update(delta_time);
 
-    // If Player collides with the enemy, they get damaged
+    // If Player collides with the enemy, they get get affected based on the ghost type
     if (CheckCollisionCircleRec(
         playerRef->position,
         playerRef->radius,
@@ -266,12 +266,17 @@ void Enemy::HandlePlayerCollision() {
 Shadow::Shadow(Vector2 pos, float size, float speed) : Enemy(pos, size, speed) {
     //ill set custom stats latur
     hp = 1.0f;
-    baseColor = DARKGRAY; 
+    baseColor = DARKBROWN; 
     color = baseColor; 
 }
 
 void Shadow::HandlePlayerCollision() {
-    //ill set custom stats latur
+    // obscures view when you touch them. upon touching, they disappear too. they do not hurt the player
+    if (alive) {
+            playerRef->obscureTimer = 2.0f; 
+            alive = false; 
+            std::cout << "Shadow touched! Vision obscured." << std::endl;
+        }
 }
 
 
@@ -282,7 +287,12 @@ Spirit::Spirit(Vector2 pos, float size, float speed) : Enemy(pos, size, speed) {
 }
 
 void Spirit::HandlePlayerCollision() {
-    //ill set custom stats latur
+    //slows the player down temporarily (for maybe 3 seconds) but doesnt hurt the player
+    if (playerRef->slowTimer <= 0) {
+            playerRef->slowTimer = 3.0f; 
+            std::cout << "Spirit touched! Player slowed." << std::endl;
+        }
+
 }
 
 Poltergeist::Poltergeist(Vector2 pos, float size, float speed) : Enemy(pos, size, speed) {
@@ -292,6 +302,7 @@ Poltergeist::Poltergeist(Vector2 pos, float size, float speed) : Enemy(pos, size
 }
 
 void Poltergeist::HandlePlayerCollision() {
-    //ill set custom stats latur
+
     playerRef->TakeDamage(1.0f);
+
 }

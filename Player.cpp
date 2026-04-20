@@ -119,6 +119,16 @@ void Player::Update(float delta_time) {
             isInvincible = false;
         }
     }
+
+    if (slowTimer > 0) {
+        slowTimer -= delta_time;
+        speedMultiplier = 0.5f;
+    } else {
+        speedMultiplier = 1.0f;
+    }
+
+    if (obscureTimer > 0) obscureTimer -= delta_time;
+
 }
 
 void Player::Draw() {
@@ -126,7 +136,7 @@ void Player::Draw() {
         DrawCircleV(position, radius + 25, VIOLET);
     }
     DrawCircleV(position, radius, color);
-    // DrawCircleSector(position, radius/2, 0, invincibleTimer/invincibleDuration*360, 20, BLACK);
+
 }
 
 Player::Player(Vector2 pos, float rad, float spd) {
@@ -245,24 +255,19 @@ void PlayerMoving::Update(float delta_time) {
         Vector2Scale(player->velocity, player->speed * delta_time)
     );
 
-    float dist = player->speed * delta_time;
-    
+    float currentSpeed = player->speed * player->speedMultiplier;
+    float dist = currentSpeed * delta_time;
+
     Vector2 nextX = { player->position.x + player->velocity.x * dist, player->position.y + player->velocity.y * dist };
-    // if (!CheckTileCollision(nextX, player->radius, rooms, player->tileScale, player->tileSize)) {
-    //     player->position.x = nextX.x;
-    // }
-    if (!CheckTileCollisionRoom(nextX, player->radius, player->current_room)) {
-        player->position.x = nextX.x;
-    }
+        if (!CheckTileCollisionRoom(nextX, player->radius, player->current_room)) {
+            player->position.x = nextX.x;
+        }
     
     // Check Y movement
     Vector2 nextY = { player->position.x, player->position.y + player->velocity.y * dist };
-    // if (!CheckTileCollision(nextY, player->radius, rooms, player->tileScale, player->tileSize)) {
-    //     player->position.y = nextY.y;
-    // }
-    if (!CheckTileCollisionRoom(nextY, player->radius, player->current_room)) {
-        player->position.y = nextY.y;
-    }
+        if (!CheckTileCollisionRoom(nextY, player->radius, player->current_room)) {
+            player->position.y = nextY.y;
+        }
     
     if (CheckTileCollect({nextX.x, nextY.y}, player->radius, player->current_room)) {
         player->key_collected = true;
@@ -309,8 +314,8 @@ void PlayerBlocking::Update(float delta_time) {
 void PlayerDodging::Update(float delta_time) {
     player->dodgeTimer -= delta_time;
 
-    //When dodging, move player in direction faster
-    Vector2 dashedPosition = Vector2Scale(player->dodgeDirection, player->speed * 2 * delta_time);
+    //When dodging, move player in direction faster, but if slowed, it will also be slow
+    Vector2 dashedPosition = Vector2Scale(player->dodgeDirection, (player->speed * player->speedMultiplier) * 2 * delta_time);
 
     Vector2 nextPosition = Vector2Add(player->position, dashedPosition);
 
