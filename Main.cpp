@@ -98,7 +98,7 @@ int main()
     camera_view.offset = {(float) screen_width /2 , (float)screen_height / 2};
     camera_view.zoom = 1.0f;
     
-    vector<Room*> created_rooms = GenerateDungeon();
+    vector<Room*> created_rooms = GenerateDungeon(10, 20);
     // RoomCollisions(created_rooms, tile_types);
 
     // Enemy bossEnemy({0, 0}, 30.0f, 150.0f);
@@ -232,7 +232,7 @@ int main()
             }
             created_rooms.clear();
 
-            created_rooms = GenerateDungeon();
+            created_rooms = GenerateDungeon(10, 20);
             // RoomCollisions(created_rooms, tile_types);
 
             for (Room* r : created_rooms) {
