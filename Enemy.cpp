@@ -37,17 +37,16 @@ void Enemy::Update(float delta_time) {
         HandlePlayerCollision();
     }
 
-    
     if (CheckCollisionCircles(
-        playerRef->position,
-        playerRef->radius + 25,
+        playerRef->tongueEndPoint,
+        10.0f,
         position,
-        (size * sqrt(2))/2
-        ) && 
-        (dynamic_cast<PlayerAttacking*>(playerRef->GetCurrentState()))
+        size/2.0f
+        ) && (dynamic_cast<PlayerAttacking*>(playerRef->GetCurrentState()))
     ) {
         TakeDamage();
     }
+
 }
 
 void Enemy::Draw() {

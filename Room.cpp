@@ -3,6 +3,8 @@
 #include <queue>
 #include <iostream>
 
+#include "Enemy.hpp"
+
 enum RoomType {
     EMPTY,
     START,
@@ -32,6 +34,7 @@ struct Room {
     std::vector<Vector2> collectable_tiles;
     std::vector<Vector2> unlockable_tiles;
     std::vector<Room*> neighbors = {nullptr, nullptr, nullptr, nullptr};
+    std::vector<Enemy*> enemies;
     
     Room(std::vector<Room*>* rooms, Vector2 position, RoomType type) {
         this->position = position;
@@ -355,3 +358,4 @@ std::vector<Room*> GenerateDungeon() {
     
     return created_rooms;
 }
+

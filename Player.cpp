@@ -5,6 +5,7 @@
 #include "Player.hpp"
 #include "Room.cpp"
 #include "Tile.cpp"
+#include "Enemy.hpp"
 
 
 bool CheckTileCollision (
@@ -313,6 +314,14 @@ void PlayerAttacking::Update(float delta_time) {
         Vector2 checkpoint = Vector2Add(tongueStart, Vector2Scale(direction, reachedDistance + step));
         if (CheckTileCollisionRoom(checkpoint, 2.0f, player->current_room)) {
             break;
+        }
+        
+        for (Enemy* enemy : player->current_room->enemies) {
+            if (enemy->alive) {
+                if (CheckCollisionCircles(checkpoint, 2.0f, enemy->position, enemy->size)) {
+                    enemy->TakeDamage();
+                }
+            }
         }
         reachedDistance += step;
     }
