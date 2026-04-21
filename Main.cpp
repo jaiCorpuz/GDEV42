@@ -97,7 +97,7 @@ int main()
     camera_view.target = player.position;
     camera_view.offset = {(float) screen_width /2 , (float)screen_height / 2};
     camera_view.zoom = 1.0f;
-    player.camera = &camera_view;
+    player.camera = &camera_view;   //Knows where cursor is relative to player position
     
     vector<Room*> created_rooms = GenerateDungeon();
     // RoomCollisions(created_rooms, tile_types);
@@ -395,6 +395,18 @@ int main()
                             if (r->type == KEY && !r->key_collected) {
                                 if (i==SCREEN_TILE_HEIGHT/2 && j==SCREEN_TILE_WIDTH/2) {
                                     tile_type = 17;
+                                }
+                            }
+                            
+                            if (r->type == CATNIP && !r->key_collected) {
+                                if (i==SCREEN_TILE_HEIGHT/2 && j==SCREEN_TILE_WIDTH/2) {
+                                    tile_type = 18;
+                                }
+                            }
+
+                            if (r->type == CATFOOD && !r->key_collected) {
+                                if (i==SCREEN_TILE_HEIGHT/2 && j==SCREEN_TILE_WIDTH/2) {
+                                    tile_type = 19;
                                 }
                             }
 
