@@ -71,6 +71,7 @@ public:
     Camera2D* camera;
     bool key_collected = false;
     Room* current_room;
+    Vector2 tongueEndPoint;
 
     Vector2 velocity;
     Vector2 acceleration;

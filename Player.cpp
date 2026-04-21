@@ -133,6 +133,10 @@ void Player::Update(float delta_time) {
 
 void Player::Draw() {
     if (dynamic_cast<PlayerAttacking*>(current_state)) {
+        DrawLineEx(position, tongueEndPoint, 8.0f, PINK);
+        DrawCircleV(tongueEndPoint, 10.0f, MAROON);
+        Vector2 mouseInWorld = GetScreenToWorld2D(GetMousePosition(), *camera);
+        DrawCircleV(mouseInWorld, 5, YELLOW);
         DrawCircleV(position, radius + 25, VIOLET);
     }
     DrawCircleV(position, radius, color);
@@ -294,10 +298,34 @@ void PlayerAttacking::Update(float delta_time) {
     //count down from the active time of your Attack
     player->attackTimer -= delta_time;
 
+    // Get mouse position in game world
+    Vector2 worldMousePos = GetScreenToWorld2D(GetMousePosition(), *player->camera);
+    
+    Vector2 tongueStart = player->position;
+    Vector2 direction = Vector2Normalize(Vector2Subtract(worldMousePos, tongueStart));
+    float maxDistance = Vector2Distance(tongueStart, worldMousePos);
+
+    // Check for collision
+    float reachedDistance = 0.0f;
+    float step = 4.0f;
+
+    while (reachedDistance < maxDistance) {
+        Vector2 checkpoint = Vector2Add(tongueStart, Vector2Scale(direction, reachedDistance + step));
+        if (CheckTileCollisionRoom(checkpoint, 2.0f, player->current_room)) {
+            break;
+        }
+        reachedDistance += step;
+    }
+
+    player->tongueEndPoint = Vector2Add(tongueStart, Vector2Scale(direction, reachedDistance));
+
+
     //When the attack is finished, transition back to idle
     if (player->attackTimer <= 0.0f) {
         player->SetState(&player->idle);
     }
+
+
   // HARD CODED
 }
 

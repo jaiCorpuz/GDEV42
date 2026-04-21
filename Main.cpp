@@ -97,6 +97,7 @@ int main()
     camera_view.target = player.position;
     camera_view.offset = {(float) screen_width /2 , (float)screen_height / 2};
     camera_view.zoom = 1.0f;
+    player.camera = &camera_view;
     
     vector<Room*> created_rooms = GenerateDungeon();
     // RoomCollisions(created_rooms, tile_types);
@@ -130,7 +131,7 @@ int main()
                 int enemyType = GetRandomValue(0, 2);
                 Enemy* e = nullptr;
 
-              
+
                 float ex = (r->position.x * screen_width) + GetRandomValue(100, screen_width - 100);
                 float ey = (r->position.y * screen_height) + GetRandomValue(100, screen_height - 100);
 
@@ -528,11 +529,11 @@ int main()
         } else if (currentScreen == GAMEOVER) {
             DrawText("GAMEOVER :(", screen_width/2 - MeasureText("GAMEOVER :(", 60)/2, screen_height/2 - 40, 60, RED);
             DrawText("Press 'R' to Restart", screen_width/2 - MeasureText("Press 'R' to Restart", 30)/2, screen_height/2 + 40, 30, WHITE);
-           
+
         } else if (currentScreen == WIN) {
             DrawText("YOU WIN!", screen_width/2 - MeasureText("YOU WIN!", 60)/2, screen_height/2 - 40, 60, GOLD);
             DrawText("Press 'R' to Restart", screen_width/2 - MeasureText("Press 'R' to Restart", 30)/2, screen_height/2 + 40, 30, WHITE);
-           
+
         }
     
         EndDrawing();
