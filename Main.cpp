@@ -396,6 +396,11 @@ int main()
                                     tile_type = 17;
                                 }
                             }
+                            if (r->type == BOSS) {
+                                if (i==SCREEN_TILE_HEIGHT/2 && j==SCREEN_TILE_WIDTH/2) {
+                                    tile_type = 18;
+                                }
+                            }
 
                             // add interactions to tiles
                             // this actually allows the same tile to be in collidable_tiles multiple times
