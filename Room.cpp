@@ -12,7 +12,9 @@ enum RoomType {
     END,
     BOSS,
     DOOR,
-    KEY
+    KEY,
+    CATFOOD, 
+    CATNIP
 };
 
 enum Direction {
@@ -355,6 +357,23 @@ std::vector<Room*> GenerateDungeon() {
     std::cout << "=== key search DONE" << std::endl;
     key_room_candidates.at(key_room_index)->type = KEY;
     std::cout << TextFormat("key room: %.0f %.0f", key_room_candidates.at(key_room_index)->position.x, key_room_candidates.at(key_room_index)->position.y) << std::endl;
+
+    std::vector<Room*> validCandidateRooms;
+    for (Room* r : created_rooms) {
+        if (r->type == REGULAR) {
+            validCandidateRooms.push_back(r);
+        }
+    }
+    
+    for (int i =validCandidateRooms.size() - 1; i > 0; --i) {
+        int j = rand() % (i+1);
+        std::swap(validCandidateRooms[i], validCandidateRooms[j]);
+    }
+
+    if (validCandidateRooms.size() >= 2) {
+        validCandidateRooms[0]->type = CATFOOD;
+        validCandidateRooms[1]->type = CATNIP;
+    }
     
     return created_rooms;
 }

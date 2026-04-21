@@ -68,6 +68,7 @@ public:
     float radius;
     Color color;
     float hp = 5.0f;
+    float max_hp = 5.0f;    //Does not change
     Camera2D* camera;
     bool key_collected = false;
     Room* current_room;
@@ -82,6 +83,8 @@ public:
 
     float attackTimer;
     float attackDuration;
+    float baseAttackDuration = 0.5f;
+    float nipTimer;
 
     float dodgeTimer;
     float dodgeDuration;
@@ -109,6 +112,10 @@ public:
     void SetState(PlayerState* state);
 
     void TakeDamage(float amount);
+
+    void Heal(float amount);
+
+    void BoostAttack(float extraTime, float effectDuration);
 
     PlayerState* GetCurrentState();
 };
