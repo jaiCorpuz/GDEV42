@@ -5,25 +5,45 @@
 #include "Enemy.hpp"
 #include "Player.hpp"
 
-bool CheckTileCollisionRoom(
-    Vector2 testPosition, 
+bool CheckTileCollisionRoomEnemy (
+    Vector2 testPosition,
     float radius,
     Room* room
-);
+) {
+    float scaledTile = Tile::size * Tile::scale;
+    float roomX = 12 * scaledTile;
+    float roomY = 10 * scaledTile;
+
+    float rX = room->position.x * roomX;
+    float rY = room->position.y * roomY;
+
+    for (Vector2 tile : room->collidable_tiles) {
+        Rectangle wall = {rX + (tile.x * scaledTile), rY + (tile.y * scaledTile), scaledTile, scaledTile};
+        if (CheckCollisionCircleRec(testPosition, radius, wall)) {
+            return true;
+        }
+    }
+    return false;
+}
 
 void Enemy::Update(float delta_time) {
+
+    // Checks if the enemy is currently having a cooldown from taking damage from the player. 
     if (damageCooldownTimer > 0) {
         damageCooldownTimer -= delta_time;
     } else {
         damageCooldownTimer = 0;
     }
     
+    // Checks if the enemy is currently in the middle of an attack.
     if (attackDuration > 0.0f)
     attackDuration -= delta_time;
 
+    // Updates the current state of the enemy
     current_state->Update(delta_time);
 
-    // If Player collides with the enemy, they get get affected based on the ghost type
+    // If Player collides with the enemy, they get get affected based on the ghost type, which is defined in HandlePlayerCollision() for each enemy type. 
+    // Go to bottom to see. This also allows us to handle what we do to the player, since the ghost types have unique interactions with the player.
     if (CheckCollisionCircleRec(
         playerRef->position,
         playerRef->radius,
@@ -37,6 +57,7 @@ void Enemy::Update(float delta_time) {
         HandlePlayerCollision();
     }
 
+    // Checks if the player's tongue collides with the enemy while the player is attacking, if so, enemy takes damage. 
     if (CheckCollisionCircles(
         playerRef->tongueEndPoint,
         10.0f,
@@ -49,6 +70,7 @@ void Enemy::Update(float delta_time) {
 
 }
 
+//Draws the Enemy and the detection radiuses.
 void Enemy::Draw() {
     Rectangle dest = {
         position.x,
@@ -76,6 +98,7 @@ void Enemy::Draw() {
     }
 }
 
+// Defines the stats of the enemy.
 Enemy::Enemy(Vector2 pos, float siz, float spd){
     position = pos;
     size = siz;
@@ -97,6 +120,7 @@ Enemy::Enemy(Vector2 pos, float siz, float spd){
     SetState(&wandering);
 }
 
+// Used to change the state of the enemy.
 void Enemy::SetState(EnemyState* state){
     if (current_state == state) return;
     
@@ -110,10 +134,12 @@ void Enemy::SetState(EnemyState* state){
     }
 }
 
+// Used to check the current state of the enemy.
 EnemyState* Enemy::GetCurrentState(){
     return current_state;
 }
 
+// Called when enemy needs to take damage, such as when the player's tongue collides with the enemy while the player is attacking.
 void Enemy::TakeDamage() {
     if (damageCooldownTimer > 0.0f) {
         return;
@@ -123,6 +149,7 @@ void Enemy::TakeDamage() {
 
     damageCooldownTimer = damageCooldownDuration;
 
+    //Checks and determines whether the enemy is still alive or not.
     if (hp <= 0.0f) {
         alive = false;
         hp = 0.0f;
@@ -158,6 +185,7 @@ void EnemyReadyingAttack::Enter(){
 void EnemyAttacking::Enter(){
     enemy->color = RED;
     enemy->dashTimer= enemy->dashDuration;
+    // Set rotation to face the dash direction when attacking
     enemy->rotation = atan2f(enemy->dashDirection.y, enemy->dashDirection.x);
 }
 
@@ -173,21 +201,38 @@ void EnemyAttacking::Exit(){}
 
 void EnemyWandering::Update(float delta_time){
     // Move le enemie
-    Vector2 newPosition = Vector2Add(
-        enemy->position,
-        Vector2Scale(enemy->velocity, enemy->speed * delta_time)
-    );
+    float distance = enemy->speed * delta_time;
+    Vector2 direction = Vector2Normalize(enemy->velocity); 
 
-    if (!CheckTileCollisionRoom(newPosition, enemy->size, enemy->current_room)) {
-        enemy->position = newPosition;
+    // Calculates the next position of where the enemy will go based on the distance to travel and what direction SPECIFICALLY for the X axis.
+    Vector2 nextX = {
+        enemy->position.x + direction.x * distance,
+        enemy->position.y
+    };
+
+    // Check if the next position would collide with the wall. for the x axis.
+    if (!CheckTileCollisionRoomEnemy(nextX, enemy->size/ 2.0f, enemy->current_room)) {
+        enemy->position.x = nextX.x;
+    }
+
+    // Calculates the next position of where the enemy will go based on the distance to travel and what direction SPECIFICALLY for the Y axis.
+    Vector2 nextY = {
+        enemy->position.x,
+        enemy->position.y + direction.y * distance
+    };
+
+    // Check if the next position would collide with the wall. for the Y axis.
+    if (!CheckTileCollisionRoomEnemy(nextY, enemy->size/ 2.0f, enemy->current_room)) {
+        enemy->position.y = nextY.y;
     }
 
     // Enemy moves in random directions limitedly, 2% chance (lemme know if it should be higher...?)
-    if (GetRandomValue(0, 100) < 2) {
+    if (GetRandomValue(0, 100) < 0.5f) {
         float angle = GetRandomValue(0, 359) * (PI / 180.0f);
         enemy->velocity = Vector2Normalize({ cosf(angle), sinf(angle) });
     }
 
+    // Rotate enemy to face the direction it's moving in if it is moving.
     if (Vector2Length(enemy->velocity) > 0.001f) {
         Vector2 moveDir = Vector2Normalize(enemy->velocity);
         enemy->rotation = atan2f(moveDir.y, moveDir.x);
@@ -225,8 +270,28 @@ void EnemyChasing::Update(float delta_time){
     enemy->rotation = atan2f(playerDirection.y, playerDirection.x);
     Vector2 newPosition = Vector2Add(enemy->position, Vector2Scale(playerDirection, enemy->speed * delta_time));
 
-    if (!CheckTileCollisionRoom(newPosition, enemy->size, enemy->current_room)) {
-        enemy->position = newPosition;
+    // if (!CheckTileCollisionRoomEnemy(newPosition, enemy->size, enemy->current_room)) {
+    //     enemy->position = newPosition;
+    // }
+
+    float dist = enemy->speed * delta_time;
+    Vector2 dir = playerDirection;
+    Vector2 nextX = {
+        enemy->position.x + dir.x * dist,
+        enemy->position.y
+    };
+
+    if (!CheckTileCollisionRoomEnemy(nextX, enemy->size/ 2.0f, enemy->current_room)) {
+        enemy->position.x = nextX.x;
+    }
+
+    Vector2 nextY = {
+        enemy->position.x,
+        enemy->position.y + dir.y * dist
+    };
+
+    if (!CheckTileCollisionRoomEnemy(nextY, enemy->size/ 2.0f, enemy->current_room)) {
+        enemy->position.y = nextY.y;
     }
 }
 
@@ -248,9 +313,31 @@ void EnemyReadyingAttack::Update(float delta_time){
 void EnemyAttacking::Update(float delta_time){
     enemy->dashTimer -= delta_time;
     Vector2 newPosition = Vector2Add(enemy->position, Vector2Scale(enemy->dashDirection, enemy->speed * 4.5 * delta_time));
-    if (!CheckTileCollisionRoom(newPosition, enemy->size, enemy->current_room)) {
-        enemy->position = newPosition;
+    // if (!CheckTileCollisionRoomEnemy(newPosition, enemy->size, enemy->current_room)) {
+    //     enemy->position = newPosition;
+    // }
+
+
+    float dist = enemy->speed * 4.5f * delta_time;
+    Vector2 dir = enemy->dashDirection;
+    Vector2 nextX = {
+        enemy->position.x + dir.x * dist,
+        enemy->position.y
+    };
+
+    if (!CheckTileCollisionRoomEnemy(nextX, enemy->size/ 2.0f, enemy->current_room)) {
+        enemy->position.x = nextX.x;
     }
+
+    Vector2 nextY = {
+        enemy->position.x,
+        enemy->position.y + dir.y * dist
+    };
+
+    if (!CheckTileCollisionRoomEnemy(nextY, enemy->size/ 2.0f, enemy->current_room)) {
+        enemy->position.y = nextY.y;
+    }
+
     if (enemy->dashTimer <= 0.0f)
         {
             enemy->attackTimer = enemy->attackDuration;

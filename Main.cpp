@@ -31,6 +31,48 @@ const int SCREEN_TILE_HEIGHT = 10;
 int Tile::size;
 int Tile::scale;
 
+
+void DungeonEnemySpawner(
+    std::vector<Enemy*>& enemies,
+    std::vector<Room*>& rooms,
+    Player& player,
+    int screen_width,
+    int screen_height
+) {
+    for (Room* r : rooms) {
+        if (r->type == START) continue;
+
+        int num_enemies = GetRandomValue(1, 3);
+
+        for (int i = 0; i < num_enemies; i++) {
+
+            int enemyType = GetRandomValue(0, 2);
+            Enemy* e = nullptr;
+
+            float ex = (r->position.x * screen_width) + GetRandomValue(100, screen_width - 100);
+            float ey = (r->position.y * screen_height) + GetRandomValue(100, screen_height - 100);
+
+            if (enemyType == 0) {
+                e = new Shadow({0,0}, 30.0f, 120.0f);
+            } else if (enemyType == 1) {
+                e = new Spirit({0,0}, 30.0f, 100.0f);
+            } else {
+                e = new Poltergeist({0,0}, 30.0f, 150.0f);
+            }
+
+            e->playerRef = &player;
+            e->current_room = r;
+            e->alive = true;
+            e->position = {ex, ey};
+            e->SetState(&e->wandering);
+
+            enemies.push_back(e);
+        }
+    }
+}
+
+
+
 int main()
 {
     static std::ios_base::Init iostream_initializer;
@@ -118,44 +160,10 @@ int main()
     //     }
     // }
 
-    // bossEnemy replaced with a vector of enemy pointers
-    vector<Enemy*> dungeon_enemies;
-    
     // Spawn enemies in each room
-    for (Room* r : created_rooms) {
-        if (r->type != START) {
-            int num_enemies = GetRandomValue(1, 3); // 0 to 3 enemies per room
-            
-            for (int i = 0; i < num_enemies; i++) {
+    vector<Enemy*> dungeon_enemies;
+    DungeonEnemySpawner(dungeon_enemies, created_rooms, player, screen_width, screen_height);
 
-                int enemyType = GetRandomValue(0, 2);
-                Enemy* e = nullptr;
-
-
-                float ex = (r->position.x * screen_width) + GetRandomValue(100, screen_width - 100);
-                float ey = (r->position.y * screen_height) + GetRandomValue(100, screen_height - 100);
-
-                if (enemyType == 0) {
-                    e = new Shadow({0,0}, 30.0f, 120.0f);
-                } else if (enemyType == 1) {
-                    e = new Spirit({0,0}, 30.0f, 100.0f);
-                } else {
-                    e = new Poltergeist({0,0}, 30.0f, 150.0f);
-                }
-                
-                //Enemy* e = new Enemy({0, 0}, 30.0f, 100.0f); 
-                e->playerRef = &player;
-                e->current_room = r;
-                e->alive = true;
-                e->position = {ex, ey};
-                e->SetState(&e->wandering);
-                dungeon_enemies.push_back(e);
-
-                
-
-            }
-        }
-    }
     
     GameScreen currentScreen = PLAYING;
     while (!WindowShouldClose())
@@ -253,39 +261,7 @@ int main()
             dungeon_enemies.clear();
 
             // Re-spawn enemies for the new dungeon
-            for (Room* r : created_rooms) {
-                if (r->type != START) {
-                    int num_enemies = GetRandomValue(0, 3); // 1 to 3 enemies per room
-                    
-                    for (int i = 0; i < num_enemies; i++) {
-
-                        int enemyType = GetRandomValue(0, 2);
-                        Enemy* e = nullptr;
-
-                        // 2. Create the specific subclass
-                        float ex = (r->position.x * screen_width) + GetRandomValue(100, screen_width - 100);
-                        float ey = (r->position.y * screen_height) + GetRandomValue(100, screen_height - 100);
-
-                        if (enemyType == 0) {
-                            e = new Shadow({0,0}, 30.0f, 120.0f);
-                        } else if (enemyType == 1) {
-                            e = new Spirit({0,0}, 30.0f, 100.0f);
-                        } else {
-                            e = new Poltergeist({0,0}, 30.0f, 150.0f);
-                        }
-
-                        //Enemy* e = new Enemy({0, 0}, 30.0f, 100.0f);
-                        e->playerRef = &player;
-                        e->current_room = r;
-                        e->alive = true;
-                        e->position = {ex, ey};
-                        e->SetState(&e->wandering);
-                        dungeon_enemies.push_back(e);
-
-                    
-                    }
-                }
-            }
+            DungeonEnemySpawner(dungeon_enemies, created_rooms, player, screen_width, screen_height);
 
             player.hp = 5.0f;
             currentScreen = PLAYING;
