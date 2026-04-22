@@ -64,6 +64,9 @@ public:
 class Player {
     PlayerState* current_state = nullptr;
 public:
+    int level = 0;
+    bool level_up = false;
+
     Vector2 position;
     float radius;
     Color color;
@@ -106,6 +109,8 @@ public:
     void Draw();
 
     void SetState(PlayerState* state);
+
+    void ResetPosition();
 
     void TakeDamage(float amount);
 

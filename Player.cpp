@@ -4,8 +4,6 @@
 #include <iostream>
 #include "Player.hpp"
 #include "Room.cpp"
-#include "Tile.cpp"
-
 
 bool CheckTileCollision (
     Vector2 testPosition,
@@ -44,8 +42,10 @@ bool CheckTileCollisionRoom (
     float rY = room->position.y * roomY;
 
     for (Vector2 tile : room->collidable_tiles) {
+        // std::cout << TextFormat("%d, %d", tile.x, tile.y) << std::endl;
         Rectangle wall = {rX + (tile.x * scaledTile), rY + (tile.y * scaledTile), scaledTile, scaledTile};
         if (CheckCollisionCircleRec(testPosition, radius, wall)) {
+            // std::cout << TextFormat("%d, %d", tile.x, tile.y) << std::endl;
             return true;
         }
     }
@@ -104,6 +104,76 @@ bool CheckTileUnlock (
         }
     }
 
+    return false;
+}
+
+bool CheckTileInteract (
+    InteractType interact,
+    Vector2 testPosition,
+    float radius,
+    Room* room
+) {
+    float scaledTile = Tile::size * Tile::scale;
+    float roomX = 12 * scaledTile;
+    float roomY = 10 * scaledTile;
+
+    float rX = room->position.x * roomX;
+    float rY = room->position.y * roomY;
+
+    switch (interact)
+    {
+        case InteractType::COLLIDE:
+            for (Vector2 tile : room->collidable_tiles) {
+                // std::cout << TextFormat("%d, %d", tile.x, tile.y) << std::endl;
+                Rectangle wall = {rX + (tile.x * scaledTile), rY + (tile.y * scaledTile), scaledTile, scaledTile};
+                if (CheckCollisionCircleRec(testPosition, radius, wall)) {
+                    // std::cout << TextFormat("%d, %d", tile.x, tile.y) << std::endl;
+                    return true;
+                }
+            }
+            return false;
+            break;
+        case InteractType::COLLECT:
+            for (Vector2 tile : room->collectable_tiles) {
+                Rectangle wall = {rX + (tile.x * scaledTile), rY + (tile.y * scaledTile), scaledTile, scaledTile};
+                if (CheckCollisionCircleRec(testPosition, radius, wall)) {
+                    room->key_collected = true;
+                    return true;
+                }
+            }
+            return false;
+            break;
+        case InteractType::UNLOCK:
+            for (Vector2 tile : room->unlockable_tiles) {
+                Rectangle wall = {rX + (tile.x * scaledTile), rY + (tile.y * scaledTile), scaledTile, scaledTile};
+                if (CheckCollisionCircleRec(testPosition, radius, wall)) {
+                    for (Room* n: room->neighbors) {
+                        if (n != nullptr && n->is_locked) {
+                            n->is_locked = false;
+                            for (Room* m: n->neighbors) {
+                                if (m != nullptr) {
+                                    m->collidable_tiles.clear();
+                                }
+                            }
+                        }
+                    }
+                    room->collidable_tiles.clear();
+                    return true;
+                }
+            }
+            return false;
+            break;
+        case InteractType::STAIRS:
+            {Rectangle stairs = {rX + (room->stair_tile.x * scaledTile), rY + (room->stair_tile.y * scaledTile), scaledTile, scaledTile};
+            if (CheckCollisionCircleRec(testPosition, radius, stairs)) {
+                return true;
+            }
+            return false;}
+            break;
+        
+        default:
+            break;
+    }
     return false;
 }
 
@@ -172,6 +242,10 @@ void Player::SetState(PlayerState* state) {
 
 PlayerState* Player::GetCurrentState() {
     return current_state;
+}
+
+void Player::ResetPosition() {
+    this->position = {(float)screen_width/2.0f,(float)screen_height/2.0f};
 }
 
 void PlayerIdle::Enter() {
@@ -259,23 +333,52 @@ void PlayerMoving::Update(float delta_time) {
     float dist = currentSpeed * delta_time;
 
     Vector2 nextX = { player->position.x + player->velocity.x * dist, player->position.y + player->velocity.y * dist };
-        if (!CheckTileCollisionRoom(nextX, player->radius, player->current_room)) {
+        if (!CheckTileInteract(
+            InteractType::COLLIDE,
+            nextX,
+            player->radius,
+            player->current_room
+        )) {
             player->position.x = nextX.x;
         }
     
     // Check Y movement
     Vector2 nextY = { player->position.x, player->position.y + player->velocity.y * dist };
-        if (!CheckTileCollisionRoom(nextY, player->radius, player->current_room)) {
+        if (!CheckTileInteract(
+            InteractType::COLLIDE,
+            nextY,
+            player->radius,
+            player->current_room
+        )) {
             player->position.y = nextY.y;
         }
     
-    if (CheckTileCollect({nextX.x, nextY.y}, player->radius, player->current_room)) {
+    if (CheckTileInteract(
+            InteractType::COLLECT,
+            {nextX.x, nextY.y},
+            player->radius,
+            player->current_room
+    )) {
         player->key_collected = true;
     }
     if (player->key_collected) {
-        if (CheckTileUnlock({nextX.x, nextY.y}, player->radius, player->current_room)) {
+        if (CheckTileInteract(
+            InteractType::UNLOCK,
+            {nextX.x, nextY.y},
+            player->radius,
+            player->current_room
+        )) {
             player->key_collected = false;
         }
+    }
+    
+    if (CheckTileInteract(
+            InteractType::STAIRS,
+            {nextX.x, nextY.y},
+            player->radius,
+            player->current_room
+    )) {
+        std::cout << "STAIRS" << std::endl;
     }
 
     //If Space while moving, set state to dodge 
@@ -319,19 +422,46 @@ void PlayerDodging::Update(float delta_time) {
 
     Vector2 nextPosition = Vector2Add(player->position, dashedPosition);
 
-    if (!CheckTileCollisionRoom(nextPosition, player->radius, player->current_room)) {
+    if (!CheckTileInteract(
+            InteractType::COLLIDE,
+            nextPosition,
+            player->radius,
+            player->current_room
+        )) {
         player->position = nextPosition;
     } else {
         player->dodgeTimer = 0; 
     }
 
-    if (CheckTileCollect(nextPosition, player->radius, player->current_room)) {
+    if (CheckTileInteract(
+            InteractType::COLLECT,
+            nextPosition,
+            player->radius,
+            player->current_room
+    )) {
         player->key_collected = true;
     }
     if (player->key_collected) {
-        if (CheckTileUnlock(nextPosition, player->radius, player->current_room)) {
+        if (CheckTileInteract(
+            InteractType::UNLOCK,
+            nextPosition,
+            player->radius,
+            player->current_room
+        )) {
             player->key_collected = false;
         }
+    }
+
+    if (CheckTileInteract(
+            InteractType::STAIRS,
+            nextPosition,
+            player->radius,
+            player->current_room
+    )) {
+        GenerateDungeon(10,20);
+        player->ResetPosition();
+        player->level++;
+        player->level_up = true;
     }
 
     //If dodge timer finished, set state to idle

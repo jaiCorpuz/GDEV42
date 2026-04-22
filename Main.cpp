@@ -25,11 +25,10 @@ enum GameScreen {
     GAMEOVER, 
     WIN };
 
-const int SCREEN_TILE_WIDTH = 12;
-const int SCREEN_TILE_HEIGHT = 10;
-
 int Tile::size;
 int Tile::scale;
+
+Color level_colors[3] = {WHITE, GREEN, RED};
 
 int main()
 {
@@ -68,24 +67,27 @@ int main()
             stream >> count;
             for (int i = 0; i < count; i++) {
                 float x, y;
-                int collidable, collectable, unlockable;
+                string s_interactions;
+                unsigned int interactions;
                 getline(settings, line);
                 istringstream tile_stream(line);
-                tile_stream >> x >> y >> collidable >> collectable >> unlockable;
+                tile_stream >> x >> y;
+                tile_stream >> s_interactions;
+                interactions = stoi(s_interactions, 0, 2);
                 Rectangle tile_source = {
                     x*tile_size,
                     y*tile_size,
                     (float) tile_size,
                     (float) tile_size,
                 };
-                tile_types.push_back(Tile(tile_source, (bool) collidable, (bool) collectable, (bool) unlockable));
+                tile_types.push_back(Tile(tile_source, interactions));
             }
         }
     }
     settings.close();
 
-    int screen_width = SCREEN_TILE_WIDTH * tile_size * tile_scale;
-    int screen_height = SCREEN_TILE_HEIGHT * tile_size * tile_scale;
+    screen_width = SCREEN_TILE_WIDTH * tile_size * tile_scale;
+    screen_height = SCREEN_TILE_HEIGHT * tile_size * tile_scale;
     InitWindow(screen_width, screen_height, "AlvarezCorpuzGregorio_Homework04");
     
     Texture2D tilemap = LoadTexture(tilemap_filename.c_str());
@@ -226,7 +228,11 @@ int main()
         }
 
         //reset 
-        if (IsKeyPressed(KEY_R)) {
+        if (IsKeyPressed(KEY_R) || player.level_up) {
+            if (IsKeyPressed(KEY_R)) {
+                player.level = 0;
+            }
+
             for (Room* r: created_rooms) {
                 delete r;
             }
@@ -235,13 +241,15 @@ int main()
             created_rooms = GenerateDungeon(10, 20);
             // RoomCollisions(created_rooms, tile_types);
 
-            for (Room* r : created_rooms) {
-                if (r->type == START) {
-                    player.position.x = (r->position.x * screen_width) + (screen_width/2.0f);
-                    player.position.y = (r->position.y * screen_height) + (screen_height/2.0f);
-                    break;
-                }
-            }
+            // for (Room* r : created_rooms) {
+            //     if (r->type == START) {
+            //         player.position.x = (r->position.x * screen_width) + (screen_width/2.0f);
+            //         player.position.y = (r->position.y * screen_height) + (screen_height/2.0f);
+            //         break;
+            //     }
+            // }
+
+            player.ResetPosition();
 
             player.key_collected = false;
 
@@ -288,6 +296,7 @@ int main()
 
             player.hp = 5.0f;
             currentScreen = PLAYING;
+            player.level_up = false;
         }
 
         BeginDrawing();
@@ -405,14 +414,18 @@ int main()
                             // add interactions to tiles
                             // this actually allows the same tile to be in collidable_tiles multiple times
                             // at least it stops after a while
-                            if (tile_types[tile_type].isCollidable && r->collidable_tiles.size() < SCREEN_TILE_HEIGHT*SCREEN_TILE_WIDTH) {
+                            if (tile_types[tile_type].interactions&InteractType::COLLIDE && r->collidable_tiles.size() < SCREEN_TILE_HEIGHT*SCREEN_TILE_WIDTH) {
                                 r->collidable_tiles.push_back((Vector2){(float)(j),(float)(i)});
                             }
-                            if (tile_types[tile_type].isCollectable && r->collectable_tiles.size() < 1) {
+                            if (tile_types[tile_type].interactions&InteractType::COLLECT && r->collectable_tiles.size() < 1) {
                                 r->collectable_tiles.push_back((Vector2){(float)(j),(float)(i)});
                             }
-                            if (tile_types[tile_type].isUnlockable && r->unlockable_tiles.size() < 8) {
+                            if (tile_types[tile_type].interactions&InteractType::UNLOCK && r->unlockable_tiles.size() < 8) {
                                 r->unlockable_tiles.push_back((Vector2){(float)(j),(float)(i)});
+                            }
+                            if (tile_types[tile_type].interactions&InteractType::STAIRS && r->stair_tile == ((Vector2){-1,-1})) {
+                                std::cout << "add STAIRS" << std::endl;
+                                r->stair_tile = (Vector2){(float)j,(float)i};
                             }
 
                             // draw tile
@@ -426,7 +439,7 @@ int main()
                                     tile_size*tile_scale},
                                 {0,0},
                                 0,
-                                WHITE
+                                level_colors[player.level]
                             );
                         }
                     }

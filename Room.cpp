@@ -2,6 +2,7 @@
 #include <vector>
 #include <queue>
 #include <iostream>
+#include "Tile.cpp"
 
 enum RoomType {
     EMPTY,
@@ -20,6 +21,11 @@ enum Direction {
     SOUTH
 };
 
+const int SCREEN_TILE_WIDTH = 12;
+const int SCREEN_TILE_HEIGHT = 10;
+int screen_width;
+int screen_height;
+
 const bool ROOM_OUT = false;
 const bool BOSS_OUT = false;
 const bool DOOR_OUT = false;
@@ -36,6 +42,7 @@ struct Room {
     std::vector<Vector2> collidable_tiles;
     std::vector<Vector2> collectable_tiles;
     std::vector<Vector2> unlockable_tiles;
+    Vector2 stair_tile = {-1, -1};
     std::vector<Room*> neighbors = {nullptr, nullptr, nullptr, nullptr};
     
     Room(std::vector<Room*>* rooms, Vector2 position, RoomType type) {
