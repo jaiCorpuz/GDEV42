@@ -31,14 +31,17 @@ const int SCREEN_TILE_HEIGHT = 10;
 int Tile::size;
 int Tile::scale;
 
-
+//A function that spawns enemies in the dungeon 
 void DungeonEnemySpawner(
     std::vector<Enemy*>& enemies,
     std::vector<Room*>& rooms,
     Player& player,
     int screen_width,
-    int screen_height
+    int screen_height, 
+    int tile_size,
+    float tile_scale
 ) {
+    // For each room, spawn a random number of enemies (between 1 and 3) at random positions within the room, except for the starting room.
     for (Room* r : rooms) {
         if (r->type == START) continue;
 
@@ -49,8 +52,20 @@ void DungeonEnemySpawner(
             int enemyType = GetRandomValue(0, 2);
             Enemy* e = nullptr;
 
-            float ex = (r->position.x * screen_width) + GetRandomValue(100, screen_width - 100);
-            float ey = (r->position.y * screen_height) + GetRandomValue(100, screen_height - 100);
+            //Calcuates the walls
+            float wall_thickness = tile_size * tile_scale;
+            float enemy_radius = 30.0f;
+
+            //to prevent spawning inside walls
+            int min_x = (int)(wall_thickness + enemy_radius);
+            int max_x = (int)(screen_width - wall_thickness - enemy_radius);
+
+            int min_y = (int)(wall_thickness + enemy_radius);
+            int max_y = (int)(screen_height - wall_thickness - enemy_radius);
+
+            //position enemy in safe area that isnt a wall
+            float ex = (r->position.x * screen_width) + GetRandomValue(min_x, max_x);
+            float ey = (r->position.y * screen_height) + GetRandomValue(min_y, max_y);
 
             if (enemyType == 0) {
                 e = new Shadow({0,0}, 30.0f, 120.0f);
@@ -142,29 +157,32 @@ int main()
     player.camera = &camera_view;   //Knows where cursor is relative to player position
     
     vector<Room*> created_rooms = GenerateDungeon();
-    // RoomCollisions(created_rooms, tile_types);
 
-    // Enemy bossEnemy({0, 0}, 30.0f, 150.0f);
-    // bossEnemy.playerRef = &player;
-    
-    // //places the boss in the boss room
-    // for (Room* r : created_rooms) {
-    //     if (r->type == BOSS) {
-    //         bossEnemy.current_room = r;
-    //         bossEnemy.position.x = (r->position.x * screen_width) + (screen_width / 2.0f);
-    //         bossEnemy.position.y = (r->position.y * screen_height) + (screen_height / 2.0f);
-    //         bossEnemy.hp = 2.0f;
-    //         bossEnemy.alive = true;
-    //         bossEnemy.SetState(&bossEnemy.wandering);
-    //         break;
-    //     }
-    // }
+    Enemy* bossEnemy = nullptr;
+    for (Room* r : created_rooms) {
+        if (r->type == BOSS) {
+
+            bossEnemy = new Boss({0, 0}, 40.0f, 120.0f);
+
+            bossEnemy->playerRef = &player;
+            bossEnemy->current_room = r;
+            bossEnemy->alive = true;
+
+            bossEnemy->position = {
+                (r->position.x * screen_width) + (screen_width / 2.0f),
+                (r->position.y * screen_height) + (screen_height / 2.0f)
+            };
+
+            bossEnemy->SetState(&bossEnemy->wandering);
+
+            break; // only one boss
+        }
+    }
 
     // Spawn enemies in each room
     vector<Enemy*> dungeon_enemies;
-    DungeonEnemySpawner(dungeon_enemies, created_rooms, player, screen_width, screen_height);
+    DungeonEnemySpawner(dungeon_enemies, created_rooms, player, screen_width, screen_height, tile_size, tile_scale);
 
-    
     GameScreen currentScreen = PLAYING;
     while (!WindowShouldClose())
     {
@@ -196,6 +214,7 @@ int main()
 
             bool allEnemiesDead = true; 
 
+            //Update enemy if they are alive. 
             for (Enemy* e : dungeon_enemies) {
                 if (e->alive) {
                     allEnemiesDead = false; 
@@ -213,24 +232,23 @@ int main()
                 currentScreen = WIN; //temptemptemp
             }
             
-            // if (bossEnemy.alive) {
+            if (bossEnemy->alive) {
 
-            //     int bossRoomX = floor(bossEnemy.position.x / screen_width);
-            //     int bossRoomY = floor(bossEnemy.position.y / screen_height);
+                int bossRoomX = floor(bossEnemy->position.x / screen_width);
+                int bossRoomY = floor(bossEnemy->position.y / screen_height);
 
-            //     //if the player enters the boss room, that is when the boss moves
-            //     if (roomX == bossRoomX && roomY == bossRoomY) {
-            //         bossEnemy.Update(delta_time);
-            //     }
-            // }     
+                //if the player enters the boss room, that is when the boss moves
+                if (roomX == bossRoomX && roomY == bossRoomY) {
+                    bossEnemy->Update(delta_time);
+                }
+            }     
             
             //gameover if the player loses health, win if the player kills boss.
-            // if (player.hp <= 0) {
-            //     currentScreen = GAMEOVER;
-            // }
-            // } else if (!bossEnemy.alive) {
-            //     currentScreen = WIN;
-            // }
+            if (player.hp <= 0) {
+                currentScreen = GAMEOVER;
+            } else if (!bossEnemy->alive) {
+                currentScreen = WIN;
+            }
 
         }
 
@@ -254,14 +272,14 @@ int main()
 
             player.key_collected = false;
 
-            // Memory cleanup for enemies
+            //Reset the enemy vector
             for (Enemy* e : dungeon_enemies) {
                 delete e;
             }
             dungeon_enemies.clear();
 
             // Re-spawn enemies for the new dungeon
-            DungeonEnemySpawner(dungeon_enemies, created_rooms, player, screen_width, screen_height);
+            DungeonEnemySpawner(dungeon_enemies, created_rooms, player, screen_width, screen_height, tile_size, tile_scale);
 
             player.hp = 5.0f;
             currentScreen = PLAYING;
@@ -273,6 +291,9 @@ int main()
             BeginMode2D(camera_view);
         
             for (Room* r: created_rooms) {
+                r->collidable_tiles.clear();
+                r->collectable_tiles.clear();
+                r->unlockable_tiles.clear();
                 if (
                     player.current_room == r ||
                     (player.current_room->neighbors.at(NORTH) != nullptr && player.current_room->neighbors.at(NORTH) == r) ||
@@ -434,6 +455,10 @@ int main()
                     e->Draw();
                 }
             }          
+
+            if (bossEnemy->alive) {
+                bossEnemy->Draw();
+            }
             
             DrawText(TextFormat("HP: %d", (int)player.hp), (int)player.position.x - 25, (int)player.position.y - 40, 20, GREEN);
             
@@ -532,6 +557,11 @@ int main()
             delete e;
     }
     dungeon_enemies.clear();
+
+    if (bossEnemy != nullptr) {
+        delete bossEnemy;
+        bossEnemy = nullptr;
+    }
 
     CloseWindow();
 

@@ -200,6 +200,7 @@ void EnemyAttacking::Exit(){}
 
 
 void EnemyWandering::Update(float delta_time){
+
     // Move le enemie
     float distance = enemy->speed * delta_time;
     Vector2 direction = Vector2Normalize(enemy->velocity); 
@@ -249,17 +250,19 @@ void EnemyWandering::Update(float delta_time){
 }
 
 void EnemyChasing::Update(float delta_time){
+    
     if (enemy->playerRef == nullptr) return;
     
+    // Gets the direction and distance from the enemy to the player.
     Vector2 playerDirection = Vector2Subtract(enemy->playerRef->position, enemy->position);
     float playerDistance = Vector2Length(playerDirection);
     
-    //If Player leaves the Enemy’s aggro radius, the enemy transitions back to the Wandering state.
+    //If player leaves the Enemy’s aggro radius, the enemy transitions back to the Wandering state.
     if (playerDistance > enemy->aggroRadius) {
         enemy->SetState(&enemy->wandering);
     }
 
-    //If Player enters the enemy’s attack radius, the enemy transitions to the Readying Attack state.
+    //If player enters the enemy’s attack radius, the enemy transitions to the Readying Attack state.
     if (playerDistance < enemy->attackRadius && enemy->attackDuration <= 0.0f) {
         enemy->SetState(&enemy->readyingAttack);
         return;
@@ -268,16 +271,11 @@ void EnemyChasing::Update(float delta_time){
     //The enemy chases the player, rotating its body towards the Player’s direction
     playerDirection = Vector2Normalize(playerDirection);
     enemy->rotation = atan2f(playerDirection.y, playerDirection.x);
-    Vector2 newPosition = Vector2Add(enemy->position, Vector2Scale(playerDirection, enemy->speed * delta_time));
 
-    // if (!CheckTileCollisionRoomEnemy(newPosition, enemy->size, enemy->current_room)) {
-    //     enemy->position = newPosition;
-    // }
-
-    float dist = enemy->speed * delta_time;
-    Vector2 dir = playerDirection;
+    //move le enemie towards player where instead of direction, we reference the playerDirection.
+    float distance = enemy->speed * delta_time;
     Vector2 nextX = {
-        enemy->position.x + dir.x * dist,
+        enemy->position.x + playerDirection.x * distance,
         enemy->position.y
     };
 
@@ -287,7 +285,7 @@ void EnemyChasing::Update(float delta_time){
 
     Vector2 nextY = {
         enemy->position.x,
-        enemy->position.y + dir.y * dist
+        enemy->position.y + playerDirection.y * distance
     };
 
     if (!CheckTileCollisionRoomEnemy(nextY, enemy->size/ 2.0f, enemy->current_room)) {
@@ -296,13 +294,16 @@ void EnemyChasing::Update(float delta_time){
 }
 
 void EnemyReadyingAttack::Update(float delta_time){
+
     enemy->readyTimer -= delta_time;
 
+    //Direction reference to the player
     Vector2 dirToPlayer = Vector2Subtract(enemy->playerRef->position, enemy->position);
     dirToPlayer = Vector2Normalize(dirToPlayer);
 
     enemy->rotation = atan2f(dirToPlayer.y, dirToPlayer.x);
     
+    //Face the player while you are readying attack, but do not move. Then when the ready timer is finished, go to the attack state.
     if (enemy->readyTimer <= 0.0f) {
         Vector2 lockedDir = Vector2Subtract (enemy->playerRef->position, enemy->position);
         enemy->dashDirection = Vector2Normalize(lockedDir);
@@ -311,17 +312,15 @@ void EnemyReadyingAttack::Update(float delta_time){
 }
 
 void EnemyAttacking::Update(float delta_time){
+    
     enemy->dashTimer -= delta_time;
-    Vector2 newPosition = Vector2Add(enemy->position, Vector2Scale(enemy->dashDirection, enemy->speed * 4.5 * delta_time));
-    // if (!CheckTileCollisionRoomEnemy(newPosition, enemy->size, enemy->current_room)) {
-    //     enemy->position = newPosition;
-    // }
 
-
-    float dist = enemy->speed * 4.5f * delta_time;
-    Vector2 dir = enemy->dashDirection;
+    //Move the enemy in the dash direction, speed up.
+    //move le enemie towards player where instead of direction, we reference the dashDirection of the enemy.
+    float attackDistance = enemy->speed * 4.5f * delta_time;
+    Vector2 directionDash = enemy->dashDirection;
     Vector2 nextX = {
-        enemy->position.x + dir.x * dist,
+        enemy->position.x + directionDash.x * attackDistance,
         enemy->position.y
     };
 
@@ -331,7 +330,7 @@ void EnemyAttacking::Update(float delta_time){
 
     Vector2 nextY = {
         enemy->position.x,
-        enemy->position.y + dir.y * dist
+        enemy->position.y + directionDash.y * attackDistance
     };
 
     if (!CheckTileCollisionRoomEnemy(nextY, enemy->size/ 2.0f, enemy->current_room)) {
@@ -349,6 +348,7 @@ void Enemy::HandlePlayerCollision() {
     // ill add damage latur
 }
 
+//All custom enemy types that inherits from Enemy.
 Shadow::Shadow(Vector2 pos, float size, float speed) : Enemy(pos, size, speed) {
     //ill set custom stats latur
     hp = 1.0f;
@@ -357,7 +357,7 @@ Shadow::Shadow(Vector2 pos, float size, float speed) : Enemy(pos, size, speed) {
 }
 
 void Shadow::HandlePlayerCollision() {
-    // obscures view when you touch them. upon touching, they disappear too. they do not hurt the player
+    //Obscures view when you touch them. upon touching, they disappear too. they do not hurt the player
     if (alive) {
             playerRef->obscureTimer = 2.0f; 
             alive = false; 
@@ -373,7 +373,7 @@ Spirit::Spirit(Vector2 pos, float size, float speed) : Enemy(pos, size, speed) {
 }
 
 void Spirit::HandlePlayerCollision() {
-    //slows the player down temporarily (for maybe 3 seconds) but doesnt hurt the player
+    //Slows the player down temporarily (for maybe 3 seconds) but doesnt hurt the player
     if (playerRef->slowTimer <= 0) {
             playerRef->slowTimer = 3.0f; 
             std::cout << "Spirit touched! Player slowed." << std::endl;
@@ -382,12 +382,26 @@ void Spirit::HandlePlayerCollision() {
 }
 
 Poltergeist::Poltergeist(Vector2 pos, float size, float speed) : Enemy(pos, size, speed) {
+    //Hurts player during attack
     hp = 3.0f;
     baseColor = PURPLE;
     color = baseColor;
 }
 
 void Poltergeist::HandlePlayerCollision() {
+
+    playerRef->TakeDamage(1.0f);
+
+}
+
+Boss::Boss(Vector2 pos, float size, float speed) : Enemy(pos, size, speed) {
+    //Hurts player during attack
+    hp = 10.0f;
+    baseColor = PINK;
+    color = baseColor;
+}
+
+void Boss::HandlePlayerCollision() {
 
     playerRef->TakeDamage(1.0f);
 

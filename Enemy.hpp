@@ -128,5 +128,11 @@ public:
     void HandlePlayerCollision() override;
 };
 
+class Boss : public Enemy {
+public:
+    Boss(Vector2 pos, float size, float speed);
+    void HandlePlayerCollision() override;
+};
+
 
 #endif
