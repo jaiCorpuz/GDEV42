@@ -151,6 +151,7 @@ int main()
     Player player({(float)screen_width/2.0f,(float)screen_height/2.0f}, screen_height/25.6f, (float)screen_height/8*3);
 
     vector<Room*> created_rooms;
+    vector<Enemy*> dungeon_enemies;
 
     ifstream save("save_file.txt");
     if (save.good()) {
@@ -247,6 +248,7 @@ int main()
                     e->alive = saved_enemy_alive;
                     e->position = saved_enemy_position;
                     e->SetState(&e->wandering);
+                    dungeon_enemies.push_back(e);
 
                 }
             }
@@ -254,6 +256,7 @@ int main()
     } else {
         std::cout << "no save file" << std::endl;
         created_rooms = GenerateDungeon(5);
+        DungeonEnemySpawner(dungeon_enemies, created_rooms, player, screen_width, screen_height, tile_size, tile_scale);
     }
 
 
@@ -288,8 +291,8 @@ int main()
     }
 
     // Spawn enemies in each room
-    vector<Enemy*> dungeon_enemies;
-    DungeonEnemySpawner(dungeon_enemies, created_rooms, player, screen_width, screen_height, tile_size, tile_scale);
+    // vector<Enemy*> dungeon_enemies;
+    // DungeonEnemySpawner(dungeon_enemies, created_rooms, player, screen_width, screen_height, tile_size, tile_scale);
 
     GameScreen currentScreen = PLAYING;
     while (!WindowShouldClose())
@@ -346,7 +349,7 @@ int main()
                 currentScreen = WIN; //temptemptemp
             }
             
-            if (bossEnemy->alive) {
+            if (bossEnemy != nullptr && bossEnemy->alive) {
 
                 int bossRoomX = floor(bossEnemy->position.x / screen_width);
                 int bossRoomY = floor(bossEnemy->position.y / screen_height);
@@ -406,6 +409,32 @@ int main()
 
             // Re-spawn enemies for the new dungeon
             DungeonEnemySpawner(dungeon_enemies, created_rooms, player, screen_width, screen_height, tile_size, tile_scale);
+
+            if (bossEnemy != nullptr) {
+                delete bossEnemy;
+                bossEnemy = nullptr;
+            }
+
+            for (Room* r : created_rooms) {
+                if (r->type == BOSS) {
+
+                    bossEnemy = new Boss({0, 0}, 40.0f, 120.0f);
+
+                    bossEnemy->playerRef = &player;
+                    bossEnemy->current_room = r;
+                    bossEnemy->alive = true;
+
+                    bossEnemy->position = {
+                        (r->position.x * screen_width) + (screen_width / 2.0f),
+                        (r->position.y * screen_height) + (screen_height / 2.0f)
+                    };
+
+                    bossEnemy->SetState(&bossEnemy->wandering);
+
+                    break;
+                }
+            }
+
 
             player.hp = 5.0f;
             currentScreen = PLAYING;
@@ -596,7 +625,7 @@ int main()
                 }
             }          
 
-            if (bossEnemy->alive) {
+            if (bossEnemy != nullptr && bossEnemy->alive) {
                 bossEnemy->Draw();
             }
             
