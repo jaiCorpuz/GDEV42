@@ -130,9 +130,15 @@ struct Room {
     }
 };
 
-std::vector<Room*> GenerateDungeon(int min, int max) {
+std::vector<Room*> GenerateDungeon(int target) {
+    // int target_rooms;
+    // if (min == max) {
+    //     target_rooms = min;
+    // } else {
+    //     target_rooms = min + rand() % (max - min + 1);
+    // }
 
-    int target_rooms = min + rand() % (max - min + 1);
+    int target_rooms = target;
     std::vector<Room*> rooms;
     
     new Room(&rooms, {0, 0}, START);

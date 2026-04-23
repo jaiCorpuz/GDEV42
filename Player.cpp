@@ -123,13 +123,17 @@ bool CheckTileInteract (
     switch (interact)
     {
         case InteractType::COLLIDE:
+            // std::cout << "=== INTERACT collide UPDATE" << std::endl;
             for (Vector2 tile : room->collidable_tiles) {
                 // std::cout << TextFormat("%d, %d", tile.x, tile.y) << std::endl;
                 Rectangle wall = {rX + (tile.x * scaledTile), rY + (tile.y * scaledTile), scaledTile, scaledTile};
+                // std::cout << "=== INTERACT wall UPDATE" << std::endl;
                 if (CheckCollisionCircleRec(testPosition, radius, wall)) {
+                    // std::cout << "=== INTERACT true UPDATE" << std::endl;
                     // std::cout << TextFormat("%d, %d", tile.x, tile.y) << std::endl;
                     return true;
                 }
+                // std::cout << "=== INTERACT false UPDATE" << std::endl;
             }
             return false;
             break;
@@ -284,7 +288,16 @@ void PlayerDodging::Exit() {}
 void PlayerBlocking::Exit() {}
 
 void PlayerIdle::Update(float delta_time) {
-    if (IsKeyDown(KEY_W) || IsKeyDown(KEY_A) || IsKeyDown(KEY_S) || IsKeyDown(KEY_D)) {
+    if (
+        IsKeyDown(KEY_UP) ||
+        IsKeyDown(KEY_DOWN) ||
+        IsKeyDown(KEY_LEFT) ||
+        IsKeyDown(KEY_RIGHT) ||
+        IsKeyDown(KEY_W) ||
+        IsKeyDown(KEY_A) ||
+        IsKeyDown(KEY_S) ||
+        IsKeyDown(KEY_D)
+    ) {
         player->SetState(&player->moving);
     } 
 
@@ -301,19 +314,19 @@ void PlayerMoving::Update(float delta_time) {
     player->velocity = Vector2Zero();
     //Movement Logic
     //Move up
-    if (IsKeyDown(KEY_W)){
+    if (IsKeyDown(KEY_W) || IsKeyDown(KEY_UP)){
         player->velocity.y -= 1;
     }
     //Move left
-    if (IsKeyDown(KEY_A)){
+    if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT)){
         player->velocity.x -= 1;
     }
     //Move down
-    if(IsKeyDown(KEY_S)){
+    if(IsKeyDown(KEY_S) || IsKeyDown(KEY_DOWN)){
         player->velocity.y += 1;
     }
     //Move right
-    if(IsKeyDown(KEY_D)){
+    if(IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)){
         player->velocity.x += 1;
     }
     
@@ -321,7 +334,7 @@ void PlayerMoving::Update(float delta_time) {
     if(Vector2Length(player->velocity) == 0) {
         player->SetState(&player->idle);
     }
-
+    
     //Move le player
     player->velocity = Vector2Normalize(player->velocity);
     Vector2 nextPosition = Vector2Add(
@@ -331,7 +344,7 @@ void PlayerMoving::Update(float delta_time) {
 
     float currentSpeed = player->speed * player->speedMultiplier;
     float dist = currentSpeed * delta_time;
-
+    
     Vector2 nextX = { player->position.x + player->velocity.x * dist, player->position.y + player->velocity.y * dist };
         if (!CheckTileInteract(
             InteractType::COLLIDE,
@@ -344,20 +357,20 @@ void PlayerMoving::Update(float delta_time) {
     
     // Check Y movement
     Vector2 nextY = { player->position.x, player->position.y + player->velocity.y * dist };
-        if (!CheckTileInteract(
-            InteractType::COLLIDE,
-            nextY,
-            player->radius,
-            player->current_room
-        )) {
-            player->position.y = nextY.y;
-        }
+    if (!CheckTileInteract(
+        InteractType::COLLIDE,
+        nextY,
+        player->radius,
+        player->current_room
+    )) {
+        player->position.y = nextY.y;
+    }
     
     if (CheckTileInteract(
-            InteractType::COLLECT,
-            {nextX.x, nextY.y},
-            player->radius,
-            player->current_room
+        InteractType::COLLECT,
+        {nextX.x, nextY.y},
+        player->radius,
+        player->current_room
     )) {
         player->key_collected = true;
     }
@@ -372,20 +385,20 @@ void PlayerMoving::Update(float delta_time) {
         }
     }
     
-    if (CheckTileInteract(
-            InteractType::STAIRS,
-            {nextX.x, nextY.y},
-            player->radius,
-            player->current_room
-    )) {
-        std::cout << "STAIRS" << std::endl;
-    }
+    // if (CheckTileInteract(
+    //         InteractType::STAIRS,
+    //         {nextX.x, nextY.y},
+    //         player->radius,
+    //         player->current_room
+    // )) {
+         
+    // }
 
     //If Space while moving, set state to dodge 
     if(IsKeyPressed(KEY_SPACE)){
         player->SetState(&player->dodging);
     }
-
+    
     //If left mouse button pressed, set state to attack
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
         player->SetState(&player->attacking);
@@ -416,31 +429,38 @@ void PlayerBlocking::Update(float delta_time) {
 
 void PlayerDodging::Update(float delta_time) {
     player->dodgeTimer -= delta_time;
-
+    // std::cout << "=== DODGING timer UPDATE" << std::endl;
+    
     //When dodging, move player in direction faster, but if slowed, it will also be slow
     Vector2 dashedPosition = Vector2Scale(player->dodgeDirection, (player->speed * player->speedMultiplier) * 2 * delta_time);
-
+    // std::cout << "=== DODGING dashedpos UPDATE" << std::endl;
+    
     Vector2 nextPosition = Vector2Add(player->position, dashedPosition);
-
+    // std::cout << "=== DODGING nextpos UPDATE" << std::endl;
+    
     if (!CheckTileInteract(
-            InteractType::COLLIDE,
-            nextPosition,
-            player->radius,
-            player->current_room
-        )) {
+        InteractType::COLLIDE,
+        nextPosition,
+        player->radius,
+        player->current_room
+    )) {
         player->position = nextPosition;
+        // std::cout << "=== DODGING no collide UPDATE" << std::endl;
     } else {
         player->dodgeTimer = 0; 
+        // std::cout << "=== DODGING yes collide UPDATE" << std::endl;
     }
-
+    // std::cout << "=== DODGING collide UPDATE" << std::endl;
+    
     if (CheckTileInteract(
-            InteractType::COLLECT,
-            nextPosition,
-            player->radius,
-            player->current_room
+        InteractType::COLLECT,
+        nextPosition,
+        player->radius,
+        player->current_room
     )) {
         player->key_collected = true;
     }
+    // std::cout << "=== DODGING collect UPDATE" << std::endl;
     if (player->key_collected) {
         if (CheckTileInteract(
             InteractType::UNLOCK,
@@ -451,6 +471,7 @@ void PlayerDodging::Update(float delta_time) {
             player->key_collected = false;
         }
     }
+    // std::cout << "=== DODGING unlock UPDATE" << std::endl;
 
     if (CheckTileInteract(
             InteractType::STAIRS,
@@ -458,16 +479,23 @@ void PlayerDodging::Update(float delta_time) {
             player->radius,
             player->current_room
     )) {
-        GenerateDungeon(10,20);
         player->ResetPosition();
-        player->level++;
+        player->SetState(&player->idle);
+        if (player->level == 2) {
+            std::cout << "=== win" << std::endl;
+            player->win = true;
+        } else {
+            player->level++;
+        }
         player->level_up = true;
     }
+    // std::cout << "=== DODGING stair UPDATE" << std::endl;
 
     //If dodge timer finished, set state to idle
     if (player->dodgeTimer <= 0.0f) {
         player->SetState(&player->idle);
     }
+    // std::cout << "=== DODGING idle UPDATE" << std::endl;
 
 }
 

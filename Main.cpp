@@ -100,7 +100,7 @@ int main()
     camera_view.offset = {(float) screen_width /2 , (float)screen_height / 2};
     camera_view.zoom = 1.0f;
     
-    vector<Room*> created_rooms = GenerateDungeon(10, 20);
+    vector<Room*> created_rooms = GenerateDungeon(5);
     // RoomCollisions(created_rooms, tile_types);
 
     // Enemy bossEnemy({0, 0}, 30.0f, 150.0f);
@@ -165,18 +165,22 @@ int main()
 
         //while the game is in playing mode (not lose or win) continue
         if(currentScreen == PLAYING){
+            // std::cout << "== PLAYING" << std::endl;
             int roomX = floor(player.position.x/screen_width);
             int roomY = floor(player.position.y/screen_height);
-
+            // std::cout << "=== ROOM X Y" << std::endl;
+            
             Vector2 desiredTarget = {
                 (roomX * screen_width) + (screen_width / 2.0f),
                 (roomY * screen_height) + (screen_height / 2.0f)
             };
             
             camera_view.target = Vector2Lerp(camera_view.target, desiredTarget, 0.05f);
-
+            // std::cout << "=== CAMERA" << std::endl;
+            
             player.Update(delta_time);
-
+            // std::cout << "=== PLAYER UPDATE" << std::endl;
+            
             for (Room* r: created_rooms) {
                 if (
                     r->position.x == std::floor(player.position.x / screen_width) &&
@@ -186,9 +190,10 @@ int main()
                     break;
                 }
             }
-
+            // std::cout << "=== ROOM UPDATE" << std::endl;
+            
             bool allEnemiesDead = true; 
-
+            
             for (Enemy* e : dungeon_enemies) {
                 if (e->alive) {
                     allEnemiesDead = false; 
@@ -198,6 +203,7 @@ int main()
                     e->Update(delta_time);
                 }
             } 
+            // std::cout << "=== ENEMY UPDATE" << std::endl;
             
             
             if (player.hp <= 0) {
@@ -225,10 +231,15 @@ int main()
             //     currentScreen = WIN;
             // }
 
+            
+            // std::cout << "!= PLAYING" << std::endl;
+
         }
 
         //reset 
         if (IsKeyPressed(KEY_R) || player.level_up) {
+            // std::cout << "== LEVEL UP" << std::endl;
+            
             if (IsKeyPressed(KEY_R)) {
                 player.level = 0;
             }
@@ -238,7 +249,7 @@ int main()
             }
             created_rooms.clear();
 
-            created_rooms = GenerateDungeon(10, 20);
+            created_rooms = GenerateDungeon(player.level_rooms[player.level]);
             // RoomCollisions(created_rooms, tile_types);
 
             // for (Room* r : created_rooms) {
@@ -297,9 +308,14 @@ int main()
             player.hp = 5.0f;
             currentScreen = PLAYING;
             player.level_up = false;
+            if (player.win) {
+                currentScreen = WIN;
+            }
+            // std::cout << "!= LEVEL UP" << std::endl;
         }
 
         BeginDrawing();
+        // std::cout << "== DRAWING" << std::endl;
         ClearBackground((Color) {0xda, 0x7a, 0x34, 0xff});
         if(currentScreen == PLAYING){
             BeginMode2D(camera_view);
@@ -424,7 +440,6 @@ int main()
                                 r->unlockable_tiles.push_back((Vector2){(float)(j),(float)(i)});
                             }
                             if (tile_types[tile_type].interactions&InteractType::STAIRS && r->stair_tile == ((Vector2){-1,-1})) {
-                                std::cout << "add STAIRS" << std::endl;
                                 r->stair_tile = (Vector2){(float)j,(float)i};
                             }
 
@@ -450,7 +465,7 @@ int main()
             player.Draw();
             if (player.key_collected) {
                 DrawTexturePro(
-                tilemap,
+                    tilemap,
                 {0, (float)8*tile_size, (float)tile_size, (float)tile_size},
                 {player.position.x-player.radius, player.position.y-player.radius, tile_size*tile_scale, tile_size*tile_scale},
                 {0,0},
@@ -552,6 +567,8 @@ int main()
             DrawText("Press 'R' to Restart", screen_width/2 - MeasureText("Press 'R' to Restart", 30)/2, screen_height/2 + 40, 30, WHITE);
            
         }
+
+        // std::cout << "!= DRAWING" << std::endl;
     
         EndDrawing();
     }

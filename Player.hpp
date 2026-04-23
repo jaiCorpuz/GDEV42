@@ -66,6 +66,9 @@ class Player {
 public:
     int level = 0;
     bool level_up = false;
+    // int level_rooms[3] = {5, 8, 11};
+    int level_rooms[3] = {5, 5, 5};
+    bool win = false;
 
     Vector2 position;
     float radius;
