@@ -269,6 +269,7 @@ int main()
             
             if (IsKeyPressed(KEY_R)) {
                 player.level = 0;
+                player.win = false;
             }
 
             for (Room* r: created_rooms) {
