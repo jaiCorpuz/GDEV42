@@ -5,6 +5,7 @@
 #include "Player.hpp"
 #include "Room.cpp"
 
+
 bool CheckTileCollision (
     Vector2 testPosition,
     float radius,
@@ -67,7 +68,7 @@ bool CheckTileCollect (
     for (Vector2 tile : room->collectable_tiles) {
         Rectangle wall = {rX + (tile.x * scaledTile), rY + (tile.y * scaledTile), scaledTile, scaledTile};
         if (CheckCollisionCircleRec(testPosition, radius, wall)) {
-            room->key_collected = true;
+            //room->key_collected = true;
             return true;
         }
     }
@@ -203,11 +204,21 @@ void Player::Update(float delta_time) {
 
     if (obscureTimer > 0) obscureTimer -= delta_time;
 
+    if(nipTimer > 0.0f) {
+        nipTimer -= delta_time;
+
+        if (nipTimer <= 0.0f) {
+            attackDuration = baseAttackDuration;
+        }
+    }
+
 }
 
 void Player::Draw() {
     if (dynamic_cast<PlayerAttacking*>(current_state)) {
-        DrawCircleV(position, radius + 25, VIOLET);
+        DrawLineEx(position, tongueEndPoint, 8.0f, PINK);
+        DrawCircleV(tongueEndPoint, 10.0f, MAROON);
+        Vector2 mouseInWorld = GetScreenToWorld2D(GetMousePosition(), *camera);
     }
     DrawCircleV(position, radius, color);
 
@@ -355,7 +366,6 @@ void PlayerMoving::Update(float delta_time) {
             player->position.x = nextX.x;
         }
     
-    // Check Y movement
     Vector2 nextY = { player->position.x, player->position.y + player->velocity.y * dist };
     if (!CheckTileInteract(
         InteractType::COLLIDE,
@@ -366,13 +376,19 @@ void PlayerMoving::Update(float delta_time) {
         player->position.y = nextY.y;
     }
     
-    if (CheckTileInteract(
-        InteractType::COLLECT,
-        {nextX.x, nextY.y},
-        player->radius,
-        player->current_room
-    )) {
-        player->key_collected = true;
+    if (CheckTileCollect({nextX.x, nextY.y}, player->radius, player->current_room)) {
+        if (player->current_room->type == KEY) {
+            player->key_collected = true;
+            player->current_room->key_collected = true;
+        }
+        else if (player->current_room->type == CATFOOD && !player->current_room->key_collected) {
+            player->Heal(1.0f);
+            player->current_room->key_collected = true; 
+        }
+        else if (player->current_room->type == CATNIP) {
+            player->BoostAttack(0.5f, 5.0f);
+            player->current_room->key_collected = true; 
+        }
     }
     if (player->key_collected) {
         if (CheckTileInteract(
@@ -410,10 +426,42 @@ void PlayerAttacking::Update(float delta_time) {
     //count down from the active time of your Attack
     player->attackTimer -= delta_time;
 
+    // Get mouse position in game world
+    Vector2 worldMousePos = GetScreenToWorld2D(GetMousePosition(), *player->camera);
+    
+    Vector2 tongueStart = player->position;
+    Vector2 direction = Vector2Normalize(Vector2Subtract(worldMousePos, tongueStart));
+    float maxDistance = Vector2Distance(tongueStart, worldMousePos);
+
+    // Check for collision
+    float reachedDistance = 0.0f;
+    float step = 4.0f;
+
+    while (reachedDistance < maxDistance) {
+        Vector2 checkpoint = Vector2Add(tongueStart, Vector2Scale(direction, reachedDistance + step));
+        if (CheckTileCollisionRoom(checkpoint, 2.0f, player->current_room)) {
+            break;
+        }
+        
+        for (Enemy* enemy : player->current_room->enemies) {
+            if (enemy->alive) {
+                if (CheckCollisionCircles(checkpoint, 2.0f, enemy->position, enemy->size)) {
+                    enemy->TakeDamage();
+                }
+            }
+        }
+        reachedDistance += step;
+    }
+
+    player->tongueEndPoint = Vector2Add(tongueStart, Vector2Scale(direction, reachedDistance));
+
+
     //When the attack is finished, transition back to idle
     if (player->attackTimer <= 0.0f) {
         player->SetState(&player->idle);
     }
+
+
   // HARD CODED
 }
 
@@ -450,15 +498,20 @@ void PlayerDodging::Update(float delta_time) {
         player->dodgeTimer = 0; 
         // std::cout << "=== DODGING yes collide UPDATE" << std::endl;
     }
-    // std::cout << "=== DODGING collide UPDATE" << std::endl;
-    
-    if (CheckTileInteract(
-        InteractType::COLLECT,
-        nextPosition,
-        player->radius,
-        player->current_room
-    )) {
-        player->key_collected = true;
+
+    if (CheckTileCollect(nextPosition, player->radius, player->current_room)) {
+        if (player->current_room->type == KEY) {
+            player->key_collected = true;
+        } 
+        else if (player->current_room->type == CATFOOD && !player->current_room->key_collected) {
+            player->Heal(1.0f);
+            player->current_room->key_collected = true; 
+        } 
+        // 3. If it's a CATNIP room
+        else if (player->current_room->type == CATNIP && !player->current_room->key_collected) {
+            player->BoostAttack(0.5f, 10.0f);
+            player->current_room->key_collected = true; 
+        }
     }
     // std::cout << "=== DODGING collect UPDATE" << std::endl;
     if (player->key_collected) {
@@ -497,6 +550,16 @@ void PlayerDodging::Update(float delta_time) {
     }
     // std::cout << "=== DODGING idle UPDATE" << std::endl;
 
+}
+
+void Player::Heal(float amount) {
+    this->hp += amount;
+    if (this->hp > max_hp) this->hp = max_hp;
+}
+
+void Player::BoostAttack(float extraTime, float effectDuration) {
+    attackDuration = baseAttackDuration + extraTime;
+    nipTimer = effectDuration;
 }
 
 void Player::TakeDamage(float damage) {

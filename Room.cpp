@@ -3,6 +3,7 @@
 #include <queue>
 #include <iostream>
 #include "Tile.cpp"
+#include "Enemy.hpp"
 
 enum RoomType {
     EMPTY,
@@ -11,7 +12,9 @@ enum RoomType {
     END,
     BOSS,
     DOOR,
-    KEY
+    KEY,
+    CATFOOD, 
+    CATNIP
 };
 
 enum Direction {
@@ -44,6 +47,7 @@ struct Room {
     std::vector<Vector2> unlockable_tiles;
     Vector2 stair_tile = {-1, -1};
     std::vector<Room*> neighbors = {nullptr, nullptr, nullptr, nullptr};
+    std::vector<Enemy*> enemies;
     
     Room(std::vector<Room*>* rooms, Vector2 position, RoomType type) {
         this->position = position;
@@ -372,7 +376,25 @@ std::vector<Room*> GenerateDungeon(int target) {
     int key_room_index = rand() % key_room_candidates.size();
     if (KEY_OUT) std::cout << "=== key search DONE" << std::endl;
     key_room_candidates.at(key_room_index)->type = KEY;
-    if (KEY_OUT) std::cout << TextFormat("key room: %.0f %.0f", key_room_candidates.at(key_room_index)->position.x, key_room_candidates.at(key_room_index)->position.y) << std::endl;
+    std::cout << TextFormat("key room: %.0f %.0f", key_room_candidates.at(key_room_index)->position.x, key_room_candidates.at(key_room_index)->position.y) << std::endl;
+
+    std::vector<Room*> validCandidateRooms;
+    for (Room* r : created_rooms) {
+        if (r->type == REGULAR) {
+            validCandidateRooms.push_back(r);
+        }
+    }
+    
+    for (int i =validCandidateRooms.size() - 1; i > 0; --i) {
+        int j = rand() % (i+1);
+        std::swap(validCandidateRooms[i], validCandidateRooms[j]);
+    }
+
+    if (validCandidateRooms.size() >= 2) {
+        validCandidateRooms[0]->type = CATFOOD;
+        validCandidateRooms[1]->type = CATNIP;
+    }
     
     return created_rooms;
 }
+

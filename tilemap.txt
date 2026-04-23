@@ -2,22 +2,24 @@ IMAGE_NAME Dungeon16.png
 TILE_SIZE 16
 TILE_SCALE 4
 TILE_COUNT 19
-0 2 0001 0  innerNWcorner
-1 2 0001 1  NSwall
-2 2 0001 2  innerNEcorner
-0 3 0001 3  Wwall
-2 3 0001 4  Ewall
-0 4 0001 5  innerSWcorner
-2 4 0001 6  innerSEcorner
-3 2 0001 7  outerNWcorner
-4 2 0001 8  outerNEcorner
-3 3 0001 9  outerSWcorner
-4 3 0001 10 outerSEcorner
-5 2 0000 11 darkFloor
-6 2 0000 12 lightFloor
-3 4 0001 13 doorStairs
-1 3 0001 14 doorEmpty
-0 5 0000 15 blank
-1 4 0101 16 doorLocked
-0 8 0010 17 key
-3 1 1000 18 stairs
+0 2  0001 0  innerNWcorner
+1 2  0001 1  NSwall
+2 2  0001 2  innerNEcorner
+0 3  0001 3  Wwall
+2 3  0001 4  Ewall
+0 4  0001 5  innerSWcorner
+2 4  0001 6  innerSEcorner
+3 2  0001 7  outerNWcorner
+4 2  0001 8  outerNEcorner
+3 3  0001 9  outerSWcorner
+4 3  0001 10 outerSEcorner
+5 2  0000 11 darkFloor
+6 2  0000 12 lightFloor
+3 4  0001 13 doorStairs
+1 3  0001 14 doorEmpty
+0 5  0000 15 blank
+1 4  0101 16 doorLocked
+0 8  0010 17 key
+3 1  1000 18 stairs
+6 9  0010 19 catnip
+0 25 0010 20 catfood
