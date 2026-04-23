@@ -6,6 +6,12 @@
 #include <vector>
 #include "Player.hpp"
 
+enum EnemyType {
+    SHADOW,
+    SPIRIT,
+    POLTERGEIST
+};
+
 class Enemy;
 
 class EnemyState {
@@ -55,6 +61,8 @@ public:
 
     virtual ~Enemy() = default;
     virtual void HandlePlayerCollision();
+
+    EnemyType type;
 
     Vector2 position;
     float size;

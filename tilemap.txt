@@ -1,7 +1,7 @@
 IMAGE_NAME Dungeon16.png
 TILE_SIZE 16
 TILE_SCALE 4
-TILE_COUNT 19
+TILE_COUNT 21
 0 2  0001 0  innerNWcorner
 1 2  0001 1  NSwall
 2 2  0001 2  innerNEcorner

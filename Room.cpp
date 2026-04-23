@@ -377,7 +377,7 @@ std::vector<Room*> GenerateDungeon(int target) {
     if (KEY_OUT) std::cout << "=== key search DONE" << std::endl;
     key_room_candidates.at(key_room_index)->type = KEY;
     std::cout << TextFormat("key room: %.0f %.0f", key_room_candidates.at(key_room_index)->position.x, key_room_candidates.at(key_room_index)->position.y) << std::endl;
-
+    
     std::vector<Room*> validCandidateRooms;
     for (Room* r : created_rooms) {
         if (r->type == REGULAR) {
@@ -389,10 +389,13 @@ std::vector<Room*> GenerateDungeon(int target) {
         int j = rand() % (i+1);
         std::swap(validCandidateRooms[i], validCandidateRooms[j]);
     }
-
+    
     if (validCandidateRooms.size() >= 2) {
-        validCandidateRooms[0]->type = CATFOOD;
-        validCandidateRooms[1]->type = CATNIP;
+        // std::cout << TextFormat("%.2f",) << std::endl;
+        validCandidateRooms.at(0)->type = CATFOOD;
+        std::cout << TextFormat("catfood room: %.0f %.0f", validCandidateRooms.at(0)->position.x, validCandidateRooms.at(0)->position.y) << std::endl;
+        validCandidateRooms.at(1)->type = CATNIP;
+        std::cout << TextFormat("catnip room: %.0f %.0f", validCandidateRooms.at(1)->position.x, validCandidateRooms.at(1)->position.y) << std::endl;
     }
     
     return created_rooms;

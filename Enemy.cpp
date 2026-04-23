@@ -351,6 +351,7 @@ void Enemy::HandlePlayerCollision() {
 //All custom enemy types that inherits from Enemy.
 Shadow::Shadow(Vector2 pos, float size, float speed) : Enemy(pos, size, speed) {
     //ill set custom stats latur
+    type = EnemyType::SHADOW;
     hp = 1.0f;
     baseColor = DARKBROWN; 
     color = baseColor; 
@@ -367,6 +368,8 @@ void Shadow::HandlePlayerCollision() {
 
 
 Spirit::Spirit(Vector2 pos, float size, float speed) : Enemy(pos, size, speed) {
+    
+    type = EnemyType::SPIRIT;
     hp = 2.0f;
     baseColor = DARKGRAY; 
     color = baseColor;
@@ -383,6 +386,7 @@ void Spirit::HandlePlayerCollision() {
 
 Poltergeist::Poltergeist(Vector2 pos, float size, float speed) : Enemy(pos, size, speed) {
     //Hurts player during attack
+    type = EnemyType::POLTERGEIST;
     hp = 3.0f;
     baseColor = PURPLE;
     color = baseColor;

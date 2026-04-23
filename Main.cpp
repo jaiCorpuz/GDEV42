@@ -141,14 +141,121 @@ int main()
         }
     }
     settings.close();
-
+    
     screen_width = SCREEN_TILE_WIDTH * tile_size * tile_scale;
     screen_height = SCREEN_TILE_HEIGHT * tile_size * tile_scale;
-    InitWindow(screen_width, screen_height, "AlvarezCorpuzGregorio_Homework04");
-    
-    Texture2D tilemap = LoadTexture(tilemap_filename.c_str());
+    InitWindow(screen_width, screen_height, "AlvarezCorpuzGregorio_FinalProject");
 
+    Texture2D tilemap = LoadTexture(tilemap_filename.c_str());
+    
     Player player({(float)screen_width/2.0f,(float)screen_height/2.0f}, screen_height/25.6f, (float)screen_height/8*3);
+
+    vector<Room*> created_rooms;
+
+    ifstream save("save_file.txt");
+    if (save.good()) {
+        std::cout << "loading save file..." << std::endl;
+
+        while(getline(save, line)) {
+            istringstream stream(line);
+            string key;
+            stream >> key;
+    
+            if (key == "ROOM_COUNT") {
+                std::cout << "ROOM_COUNT" << std::endl;
+                int room_count;
+                stream >> room_count;
+                for (int i = 0; i < room_count; i++)
+                {
+                    Vector2 saved_room;
+                    string saved_room_type;
+                    RoomType saved_roomtype;
+                    bool saved_is_locked;
+
+                    getline(save, line);
+                    istringstream room_stream(line);
+
+                    room_stream >> saved_room.x >> saved_room.y >> saved_room_type >> saved_is_locked;
+                    if (saved_room_type == "EMPTY") {
+                        saved_roomtype = RoomType::EMPTY;
+                    } else if (saved_room_type == "START") {
+                        saved_roomtype = RoomType::START;
+                    } else if (saved_room_type == "REGULAR") {
+                        saved_roomtype = RoomType::REGULAR;
+                    } else if (saved_room_type == "END") {
+                        saved_roomtype = RoomType::END;
+                    } else if (saved_room_type == "BOSS") {
+                        saved_roomtype = RoomType::BOSS;
+                    } else if (saved_room_type == "DOOR") {
+                        saved_roomtype = RoomType::DOOR;
+                    } else if (saved_room_type == "KEY") {
+                        saved_roomtype = RoomType::KEY;
+                    } else if (saved_room_type == "CATFOOD") {
+                        saved_roomtype = RoomType::CATFOOD;
+                    } else if (saved_room_type == "CATNIP") {
+                        saved_roomtype = RoomType::CATNIP;
+                    }
+                    Room* new_room = new Room(&created_rooms, saved_room, saved_roomtype);
+                    new_room->is_locked = saved_is_locked;
+                }
+            } else if (key == "PLAYER") {
+                std::cout << "PLAYER" << std::endl;
+                Vector2 saved_player_position;
+                int saved_player_level;
+                bool saved_key_collected;
+                stream >> saved_player_position.x >> saved_player_position.y >> saved_player_level >> saved_key_collected;
+                player.position = saved_player_position;
+                player.level = saved_player_level;
+                player.key_collected = saved_key_collected;
+            } else if (key == "ENEMY_COUNT") {
+                
+                int enemy_count;
+                stream >> enemy_count;
+                for (int i = 0; i < enemy_count; i++){
+
+                    Enemy* e = nullptr;
+
+                    bool saved_enemy_alive;
+                    Vector2 saved_enemy_position;
+                    string saved_enemy_type;
+                    EnemyType saved_enemytype;
+
+                    getline(save, line);
+                    istringstream enemy_stream(line);
+
+                    enemy_stream >> saved_enemy_alive >> saved_enemy_position.x >> saved_enemy_position.y >> saved_enemy_type;
+
+                    if (saved_enemy_type == "SHADOW") {
+                        e = new Shadow(saved_enemy_position, 30.0f, 120.0f);
+                    } else if (saved_enemy_type == "SPIRIT") {
+                        e = new Spirit(saved_enemy_position, 30.0f, 100.0f);
+                    } else if (saved_enemy_type == "POLTERGEIST") {
+                        e = new Poltergeist(saved_enemy_position, 30.0f, 150.0f);
+                    }
+    
+                    e->playerRef = &player;
+
+                    for (Room* r: created_rooms) {
+                        if (
+                            r->position.x == std::floor(saved_enemy_position.x / screen_width) &&
+                            r->position.y == std::floor(saved_enemy_position.y / screen_height)
+                        ) {
+                            e->current_room = r;
+                            break;
+                        }
+                    }
+                    e->alive = saved_enemy_alive;
+                    e->position = saved_enemy_position;
+                    e->SetState(&e->wandering);
+
+                }
+            }
+        }
+    } else {
+        std::cout << "no save file" << std::endl;
+        created_rooms = GenerateDungeon(5);
+    }
+
 
     int cam_type = 0;
     Camera2D camera_view ={0};
@@ -157,7 +264,6 @@ int main()
     camera_view.zoom = 1.0f;
     player.camera = &camera_view;   //Knows where cursor is relative to player position
     
-    vector<Room*> created_rooms = GenerateDungeon(5);
     // RoomCollisions(created_rooms, tile_types);
 
     Enemy* bossEnemy = nullptr;
@@ -501,10 +607,9 @@ int main()
             // DrawText(TextFormat("fps %.2f", 1/delta_time), 10, 10, 50, WHITE);
 
             if (player.obscureTimer > 0) {
-                    // Draw a solid black rectangle over the entire window
-                    DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), BLACK); 
-                
-                }
+                // Draw a solid black rectangle over the entire window
+                DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), ColorAlpha(BLACK, 0.5f)); 
+            }
 
             // minimap
             if (IsKeyDown(KEY_M)) {
@@ -590,6 +695,89 @@ int main()
     }
 
     UnloadTexture(tilemap);
+
+    CloseWindow();
+
+    if (WindowShouldClose()) {
+        ofstream out_save_file("save_file.txt");
+        out_save_file << TextFormat("ROOM_COUNT %d", player.level_rooms[player.level]) << std::endl;
+        for (int i = 0; i < player.level_rooms[player.level]; i++) {
+            string room_type;
+            switch (created_rooms.at(i)->type) {
+                case RoomType::EMPTY:
+                    room_type = "EMPTY";
+                    break;
+                case RoomType::START:
+                    room_type = "START";
+                    break;
+                case RoomType::REGULAR:
+                    room_type = "REGULAR";
+                    break;
+                case RoomType::END:
+                    room_type = "END";
+                    break;
+                case RoomType::BOSS:
+                    room_type = "BOSS";
+                    break;
+                case RoomType::DOOR:
+                    room_type = "DOOR";
+                    break;
+                case RoomType::KEY:
+                    room_type = "KEY";
+                    break;
+                case RoomType::CATFOOD:
+                    room_type = "CATFOOD";
+                    break;
+                case RoomType::CATNIP:
+                    room_type = "CATNIP";
+                    break;
+                
+                default:
+                    break;
+            }
+            out_save_file << TextFormat(
+                "%.0f %.0f %s %d",
+                created_rooms.at(i)->position.x,
+                created_rooms.at(i)->position.y,
+                room_type.c_str(),
+                created_rooms.at(i)->is_locked
+            ) << std::endl;
+        }
+        out_save_file << TextFormat(
+            "PLAYER %.2f %.2f %d %d",
+            player.position.x,
+            player.position.y,
+            player.level,
+            player.key_collected
+        ) << std::endl;
+        out_save_file << "ENEMY_COUNT " << dungeon_enemies.size() << std::endl;
+        for (int i = 0; i < dungeon_enemies.size(); i++)
+        {
+            string enemy_type;
+            switch (dungeon_enemies.at(i)->type) {
+                case EnemyType::SHADOW:
+                    enemy_type = "SHADOW";
+                    break;
+                case EnemyType::SPIRIT:
+                    enemy_type = "SPIRIT";
+                    break;
+                case EnemyType::POLTERGEIST:
+                    enemy_type = "POLTERGEIST";
+                    break;
+                
+                default:
+                    break;
+            }
+            out_save_file << TextFormat(
+                "%d %.2f %.2f %s",
+                dungeon_enemies.at(i)->alive,
+                dungeon_enemies.at(i)->position.x,
+                dungeon_enemies.at(i)->position.y,
+                enemy_type.c_str()
+            ) << std::endl;
+        }
+    }
+    
     for (Enemy* e : dungeon_enemies) {
             delete e;
     }
@@ -599,8 +787,6 @@ int main()
         delete bossEnemy;
         bossEnemy = nullptr;
     }
-
-    CloseWindow();
 
     return 0;
 }
