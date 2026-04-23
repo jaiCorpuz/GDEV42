@@ -563,7 +563,8 @@ int main()
             DrawText("Press 'R' to Restart", screen_width/2 - MeasureText("Press 'R' to Restart", 30)/2, screen_height/2 + 40, 30, WHITE);
            
         } else if (currentScreen == WIN) {
-            DrawText("YOU WIN!", screen_width/2 - MeasureText("YOU WIN!", 60)/2, screen_height/2 - 40, 60, GOLD);
+            DrawText("YOU FOUND", screen_width/2 - MeasureText("YOU FOUND", 60)/2, screen_height/2 - 110, 60, GOLD);
+            DrawText("THE LIBRARIAN!", screen_width/2 - MeasureText("THE LIBRARIAN!", 60)/2, screen_height/2 - 40, 60, GOLD);
             DrawText("Press 'R' to Restart", screen_width/2 - MeasureText("Press 'R' to Restart", 30)/2, screen_height/2 + 40, 30, WHITE);
            
         }
